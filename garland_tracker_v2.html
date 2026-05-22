@@ -1,0 +1,2795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garland Innovation — Project Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F7F6F2; --surface: #FFFFFF; --surface2: #F0EEE8;
+    --border: #E2DED5; --border2: #CCC8BE;
+    --text: #1A1916; --text2: #6B6760; --text3: #9E9B95;
+    --green: #2D6A4F; --green-bg: #D8F3E3;
+    --blue: #1A4F8A; --blue-bg: #DBE9F9;
+    --amber: #7A4E0A; --amber-bg: #FEF0D0;
+    --red: #8B1A1A; --red-bg: #FDDCDC;
+    --gray: #5F5E5A; --gray-bg: #EBEBEB;
+    --teal: #0F5C4E; --teal-bg: #D4F1EA;
+    --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
+  }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  .page-header { background: var(--text); color: #fff; padding: 28px 40px 24px; display: flex; align-items: flex-end; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .page-header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+  .page-header .sub { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 3px; font-family: var(--mono); }
+  .header-meta { text-align: right; font-size: 12px; color: rgba(255,255,255,0.45); font-family: var(--mono); }
+  .header-meta strong { color: rgba(255,255,255,0.75); display: block; font-size: 13px; margin-bottom: 2px; }
+
+  /* FILTER BARS */
+  .filter-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 40px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .filter-label { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-right: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .filter-btn { font-size: 12px; font-family: var(--font); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.15s; }
+  .filter-btn:hover { border-color: var(--border2); color: var(--text); }
+  .filter-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+  .filter-btn.owner-btn.active { background: #E24B4A; color: #fff; border-color: #E24B4A; }
+
+  /* FULLSCREEN CARD */
+  .pcard-fullscreen {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    width: 100vw !important; height: 100vh !important;
+    z-index: 9999 !important;
+    border-radius: 0 !important;
+    overflow-y: auto !important;
+    max-width: none !important;
+  }
+  .fullscreen-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: var(--surface2); border: .5px solid var(--border);
+    border-radius: 6px; padding: 4px 8px; cursor: pointer;
+    font-size: 12px; color: var(--text3); z-index: 10;
+  }
+  .fullscreen-btn:hover { color: var(--text); background: var(--surface3); }
+  .pcard { position: relative; }
+
+  /* SUMMARY */
+  .summary-bar { padding: 16px 40px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; min-width: 100px; }
+  .summary-card .num { font-size: 22px; font-weight: 600; letter-spacing: -0.03em; }
+  .summary-card .lbl { font-size: 10px; color: var(--text3); margin-top: 2px; font-family: var(--mono); }
+
+  /* PHASE HEADERS */
+  .phase-section { padding: 0 40px; margin-bottom: 4px; margin-top: 20px; display: flex; align-items: center; gap: 12px; }
+  .phase-section-label { font-size: 10px; font-family: var(--mono); font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); white-space: nowrap; }
+  .phase-section-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* GRID */
+  .projects-grid { padding: 8px 40px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; margin-bottom: 16px; }
+
+  /* PROJECT CARD */
+  .pcard { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: box-shadow 0.2s; display: flex; flex-direction: column; }
+  .pcard:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+
+  /* CARD TOP */
+  .pcard-top { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); }
+  .pcard-row1 { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .pcard-name { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .pcard-fantasy { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: var(--mono); }
+  .pcard-launch { font-size: 11px; color: var(--text3); margin-top: 5px; font-family: var(--mono); }
+  .status-pill { font-size: 10px; font-weight: 500; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; font-family: var(--mono); }
+  .pill-green { background: var(--green-bg); color: var(--green); }
+  .pill-amber { background: var(--amber-bg); color: var(--amber); }
+  .pill-red { background: var(--red-bg); color: var(--red); }
+  .pill-gray { background: var(--gray-bg); color: var(--gray); }
+  .pill-blue { background: var(--blue-bg); color: var(--blue); }
+
+  .meta-row { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+  .phase-tag { font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border); color: var(--text2); background: var(--surface2); }
+  .phase-tag.launch { background: #1A1916; color: #fff; border-color: #1A1916; }
+  .phase-tag.capability { background: var(--blue-bg); color: var(--blue); border-color: #BDD4EF; }
+  .phase-tag.idea { background: var(--amber-bg); color: var(--amber); border-color: #F0D49A; }
+  .bosscard-tag { font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 4px; background: var(--green-bg); color: var(--green); border: 1px solid #A8D9BF; }
+
+  /* PROGRESS */
+  .progress-wrap { padding: 10px 18px; border-bottom: 1px solid var(--border); }
+  .stages-bar { display: flex; gap: 3px; height: 4px; }
+  .seg { flex: 1; background: var(--border); border-radius: 1px; }
+  .seg.done { background: var(--green); }
+  .seg.active { background: #3B82F6; }
+  .seg.blocked { background: #EF4444; }
+  .seg.early { background: #F59E0B; }
+  .seg.almost { background: var(--teal); }
+  .stage-labels { display: flex; margin-top: 5px; }
+  .stage-lbl { flex: 1; font-size: 9px; color: var(--text3); font-family: var(--mono); text-align: center; line-height: 1.3; }
+  .stage-lbl.done { color: var(--green); }
+  .stage-lbl.active { color: #3B82F6; font-weight: 500; }
+  .stage-lbl.blocked { color: #EF4444; font-weight: 500; }
+  .stage-lbl.early { color: #B45309; font-weight: 500; }
+  .stage-lbl.almost { color: var(--teal); font-weight: 500; }
+
+  /* CARD BODY */
+  .pcard-body { padding: 14px 18px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+
+  .card-section {}
+  .section-lbl { font-size: 9px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+
+  /* TAGS */
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; background: var(--surface2); color: var(--text2); border: 1px solid var(--border); font-family: var(--mono); }
+  .tag.done { background: var(--green-bg); color: var(--green); border-color: #A8D9BF; }
+  .tag.progress { background: var(--blue-bg); color: var(--blue); border-color: #BDD4EF; }
+
+  /* ALLIES */
+  .allies { display: flex; flex-direction: column; gap: 4px; }
+  .ally { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border-radius: 6px; background: var(--surface2); transition: background 0.15s; }
+  .ally-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .ally-dept { font-size: 11px; font-weight: 600; color: var(--text); }
+  .ally-detail { font-size: 11px; color: var(--text2); line-height: 1.4; margin-top: 1px; }
+
+  /* HIGHLIGHTS — key info boxes */
+  .highlights { display: flex; flex-direction: column; gap: 5px; }
+  .hl { border-radius: 6px; padding: 7px 10px; font-size: 12px; line-height: 1.5; display: flex; gap: 7px; align-items: flex-start; }
+  .hl.warn { background: var(--amber-bg); border-left: 2px solid #F59E0B; color: var(--amber); }
+  .hl.alert { background: var(--red-bg); border-left: 2px solid #EF4444; color: var(--red); }
+  .hl.info { background: var(--blue-bg); border-left: 2px solid #3B82F6; color: var(--blue); }
+  .hl.success { background: var(--green-bg); border-left: 2px solid var(--green); color: var(--green); }
+  .hl.open { background: var(--surface2); border-left: 2px solid var(--border2); color: var(--text2); font-size: 11px; }
+
+  /* NEXT STEPS */
+  .nexts { display: flex; flex-direction: column; gap: 4px; }
+  .next-item { display: flex; gap: 6px; font-size: 12px; color: var(--text2); padding: 3px 5px; border-radius: 4px; transition: background 0.15s; }
+  .next-item.highlighted { background: #FFFBEB; border-left: 2px solid #F59E0B; padding-left: 6px; }
+  .next-n { font-family: var(--mono); font-size: 10px; color: var(--text3); min-width: 14px; margin-top: 2px; flex-shrink: 0; }
+  .next-owner { font-size: 10px; font-family: var(--mono); color: var(--text3); white-space: nowrap; margin-left: auto; padding-left: 6px; flex-shrink: 0; }
+  .highlight-owner { background: #FEF9C3; border-radius: 3px; padding: 0 2px; font-weight: 600; }
+
+  /* CORNELL */
+  .cornell-section { padding: 0 40px 60px; }
+  .cornell-card { background: #EAF5EE; border: 1px solid #B8DEC7; border-radius: 16px; overflow: hidden; }
+  .cornell-top { padding: 22px 30px 18px; border-bottom: 1px solid #C8E6D4; display: flex; justify-content: space-between; align-items: flex-start; }
+  .cornell-name { font-size: 19px; font-weight: 600; letter-spacing: -0.02em; color: #1A1916; }
+  .cornell-sub { font-size: 12px; color: #5A7A64; margin-top: 3px; font-family: var(--mono); }
+  .cornell-launch { font-size: 11px; color: #7A9E87; margin-top: 6px; font-family: var(--mono); }
+  .cornell-pill { font-size: 10px; font-weight: 500; padding: 3px 10px; border-radius: 20px; background: rgba(45,106,79,0.15); color: #2D6A4F; border: 1px solid rgba(45,106,79,0.3); font-family: var(--mono); }
+  .cornell-phase { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 4px; background: rgba(45,106,79,0.1); color: #2D6A4F; border: 1px solid rgba(45,106,79,0.2); margin-top: 8px; display: inline-block; }
+  .cornell-progress { padding: 12px 30px; border-bottom: 1px solid #C8E6D4; }
+  .cseg { flex: 1; border-radius: 1px; background: rgba(0,0,0,0.1); }
+  .cseg.done { background: #2D6A4F; }
+  .cseg.active { background: #3B82F6; }
+  .cornell-slabels { display: flex; margin-top: 5px; }
+  .cornell-slbl { flex: 1; font-size: 9px; color: rgba(0,0,0,0.35); font-family: var(--mono); text-align: center; }
+  .cornell-slbl.done { color: #2D6A4F; }
+  .cornell-slbl.active { color: #3B82F6; font-weight: 500; }
+  .cornell-body { padding: 20px 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .cornell-vertical { background: rgba(255,255,255,0.65); border: 1px solid #C8E6D4; border-radius: 10px; padding: 16px 18px; }
+  .cornell-v-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .cornell-v-num { font-size: 10px; font-family: var(--mono); background: rgba(45,106,79,0.15); color: #2D6A4F; padding: 2px 7px; border-radius: 3px; border: 1px solid rgba(45,106,79,0.25); }
+  .cornell-v-title { font-size: 13px; font-weight: 600; color: #1A1916; }
+  .cornell-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+  .cornell-tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(45,106,79,0.08); color: #2D6A4F; border: 1px solid rgba(45,106,79,0.2); font-family: var(--mono); }
+  .cornell-hl { border-radius: 5px; padding: 7px 10px; font-size: 12px; color: #3A5A44; margin-bottom: 5px; display: flex; gap: 6px; }
+  .cornell-hl.info { background: rgba(45,106,79,0.07); border-left: 2px solid #2D6A4F; }
+  .cornell-hl.open { background: rgba(245,158,11,0.08); border-left: 2px solid #B45309; color: #7A4E0A; }
+  .cornell-hl.impact { background: rgba(45,106,79,0.1); border-left: 2px solid #2D6A4F; color: #2D6A4F; }
+  .cornell-nexts { padding: 16px 30px; border-top: 1px solid #C8E6D4; }
+  .cornell-next { display: flex; gap: 6px; font-size: 12px; color: #3A5A44; margin-bottom: 4px; }
+  .cornell-next-n { font-family: var(--mono); font-size: 10px; color: #5A7A64; min-width: 14px; margin-top: 2px; }
+  .cornell-next-owner { font-size: 10px; font-family: var(--mono); color: #7A9E87; margin-left: auto; padding-left: 6px; }
+
+  .updated { font-size: 10px; color: var(--text3); font-family: var(--mono); text-align: right; padding: 6px 40px; }
+
+
+
+  /* BOARD VIEW */
+  #board-view { display: none; padding: 20px 40px 60px; }
+  .bv-header { margin-bottom: 20px; }
+  .bv-header h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .bv-header p { font-size: 12px; color: var(--text3); font-family: var(--mono); margin-top: 4px; }
+  .bv-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .bv-table th { font-size: 10px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); padding: 10px 16px; text-align: left; background: var(--surface2); border-bottom: 1px solid var(--border); font-weight: 500; }
+  .bv-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 12px; vertical-align: middle; }
+  .bv-table tr:last-child td { border-bottom: none; }
+  .bv-table tr:hover td { background: var(--surface2); }
+  .bv-name { font-weight: 600; font-size: 13px; color: var(--text); }
+  .bv-fantasy { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+  .bv-phase { font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 4px; display: inline-block; }
+  .bv-phase.launch { background: #1A1916; color: #fff; }
+  .bv-phase.capability { background: var(--blue-bg); color: var(--blue); }
+  .bv-phase.idea { background: var(--amber-bg); color: var(--amber); }
+  .bv-phase.tech { background: var(--teal-bg); color: var(--teal); }
+  .bv-status { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 20px; display: inline-block; }
+  .bv-status.green { background: var(--green-bg); color: var(--green); }
+  .bv-status.amber { background: var(--amber-bg); color: var(--amber); }
+  .bv-status.red { background: var(--red-bg); color: var(--red); }
+  .bv-status.gray { background: var(--gray-bg); color: var(--gray); }
+  .bv-progress { display: flex; gap: 2px; align-items: center; }
+  .bv-seg { height: 6px; flex: 1; border-radius: 1px; background: var(--border); }
+  .bv-seg.done { background: var(--green); }
+  .bv-seg.active { background: #3B82F6; }
+  .bv-seg.blocked { background: #EF4444; }
+  .bv-seg.early { background: #F59E0B; }
+  .bv-seg.almost { background: var(--teal); }
+  .bv-launch { font-size: 11px; font-family: var(--mono); color: var(--text2); white-space: nowrap; }
+  .bv-launch.urgent { color: var(--green); font-weight: 600; }
+  .bv-bosscard { font-size: 10px; color: var(--green); font-family: var(--mono); }
+  .bv-bc { display: flex; flex-direction: column; gap: 3px; }
+  .bv-bc-type { font-size: 10px; font-family: var(--mono); color: var(--text3); }
+  .bv-bc-status { font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 4px; display: inline-block; }
+  .bv-bc-status.aprobado { background: var(--green-bg); color: var(--green); }
+  .bv-bc-status.enviado { background: var(--blue-bg); color: var(--blue); }
+  .bv-bc-status.proceso { background: var(--amber-bg); color: var(--amber); }
+  .bv-bc-status.pendiente { background: var(--gray-bg); color: var(--gray); }
+  .bv-bc-status.na { color: var(--text3); font-style: italic; }
+
+  /* TIMELINE */
+  #timeline-view { display: none; padding: 20px 40px 60px; }
+  .tl-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .tl-header h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .tl-header span { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+  .tl-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .tl-legend { display: flex; gap: 16px; padding: 12px 14px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .tl-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text2); font-family: var(--mono); }
+  .tl-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .gantt-body { overflow-x: auto; overflow-y: auto; flex: 1; }
+  .gantt-table { border-collapse: collapse; min-width: 100%; }
+  .gantt-table th { font-size: 9px; font-family: var(--mono); color: #9E9B95; text-transform: uppercase; letter-spacing: 0.04em; padding: 5px 2px; text-align: center; border-right: 1px solid #E2DED5; border-bottom: 1px solid #E2DED5; background: #F7F6F2; white-space: nowrap; min-width: 28px; }
+  .gantt-table th.g-month { font-size: 10px; color: #6B6760; font-weight: 600; border-bottom: 1px solid #CCC8BE; background: #F0EEE8; }
+  .gantt-table th.g-label { width: 220px; min-width: 220px; text-align: left; padding-left: 12px; }
+  .gantt-table th.g-today { background: #EBF3FD !important; color: #1A4F8A !important; }
+  .g-phase-row td { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 6px 12px; border-bottom: 1px solid #E2DED5; }
+  .g-phase-row.idea td { background: #FEF0D0; color: #7A4E0A; }
+  .g-phase-row.capability td { background: #DBE9F9; color: #1A4F8A; }
+  .g-phase-row.launch-ph td { background: #D8F3E3; color: #2D6A4F; }
+  .g-task-row td { border-bottom: 1px solid #F5F4F0; height: 30px; }
+  .g-task-label { font-size: 11px; color: #1A1916; padding: 0 12px; white-space: nowrap; border-right: 1px solid #E2DED5; width: 220px; min-width: 220px; }
+  .g-task-label.done { color: #9E9B95; }
+  .g-task-label .owner-tag { font-size: 9px; font-family: var(--mono); color: #9E9B95; margin-left: 4px; }
+  .g-cell { border-right: 1px solid #F5F4F0; padding: 0; position: relative; min-width: 28px; }
+  .g-cell.g-today-col { background: #F0F7FF; border-right: 1px solid #BDD4EF; }
+  .g-bar { height: 14px; border-radius: 2px; margin: 0 1px; }
+  .g-bar.internal { background: #3B82F6; }
+  .g-bar.external { background: #EF4444; }
+  .g-bar.done-bar { background: #2D6A4F; opacity: 0.7; }
+  .g-bar.parallel { background: #8B5CF6; }
+  .g-bar.s { border-radius: 2px 0 0 2px; }
+  .g-bar.m { border-radius: 0; margin: 0; }
+  .g-bar.e { border-radius: 0 2px 2px 0; }
+  .g-bar.f { border-radius: 2px; }
+  .g-here { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); background: #3B82F6; color: #fff; font-size: 8px; font-family: var(--mono); font-weight: 700; padding: 2px 5px; border-radius: 3px; white-space: nowrap; z-index: 5; }
+  .g-here::after { content: ''; position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%); border: 3px solid transparent; border-top-color: #3B82F6; }
+  .g-launch-row td { background: #1A1916; color: #fff; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; padding: 7px 12px; font-family: var(--mono); }
+  .g-legend { display: flex; gap: 16px; padding: 10px 16px; background: #F7F6F2; border-top: 1px solid #E2DED5; flex-wrap: wrap; flex-shrink: 0; }
+  .g-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #6B6760; font-family: var(--mono); }
+  .g-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+  .gantt-body { padding: 16px 20px; overflow-x: auto; }
+
+  @media (max-width: 600px) {
+    .page-header, .filter-bar, .summary-bar, .phase-section { padding-left: 16px; padding-right: 16px; }
+    .projects-grid, .cornell-section { padding-left: 16px; padding-right: 16px; }
+    .cornell-body { grid-template-columns: 1fr; }
+    .updated { padding-right: 16px; }
+  }
+
+  .g-ph-head{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#F0EEE8;border-bottom:.5px solid #E2DED5;}
+  .g-pname{border:none;background:transparent;font-size:12px;font-weight:600;font-family:'Sora',sans-serif;color:#1A1916;flex:1;}
+  .g-pname:focus{outline:none;}
+  .g-del-ph{color:#9E9B95;cursor:pointer;font-size:11px;opacity:.35;}
+  .g-del-ph:hover{opacity:1;color:#E24B4A;}
+  .g-col-hdr{display:grid;grid-template-columns:20px 16px 1fr 78px 46px 140px 68px 26px 22px;padding:3px 0;background:#F0EEE8;border-bottom:.5px solid #E2DED5;font-size:9px;font-family:'DM Mono',monospace;color:#9E9B95;text-transform:uppercase;letter-spacing:.04em;}
+  .g-col-hdr span{padding:0 3px;}
+  .g-titem{display:grid;grid-template-columns:20px 16px 1fr 78px 46px 140px 68px 26px 22px;align-items:start;border-bottom:.5px solid #E2DED5;min-height:38px;padding:2px 0;transition:background .1s;}
+  .g-titem:hover{background:rgba(0,0,0,.018);}
+  .g-subtask{background:rgba(0,0,0,.015);}
+  .g-dh{display:flex;align-items:center;justify-content:center;color:#9E9B95;font-size:11px;cursor:grab;padding-top:4px;}
+  .g-dh:hover{color:#4A4845;}
+  .g-cb{display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;color:#9E9B95;padding-top:4px;}
+  .g-cb:hover{color:#185FA5;}
+  .g-cb-empty{cursor:default;opacity:0;}
+  .g-fi{border:none;background:transparent;font-family:'Sora',sans-serif;color:#1A1916;padding:4px;width:100%;font-size:11px;line-height:1.4;resize:none;min-height:26px;}
+  .g-fi:hover{background:#F0EEE8;border-radius:4px;}
+  .g-fi:focus{outline:none;background:#fff;border-radius:4px;box-shadow:0 0 0 1.5px #185FA5;}
+  .g-own{font-size:10px;color:#9E9B95;}
+  .g-dur{font-family:'DM Mono',monospace;font-size:11px;text-align:center;min-height:unset;height:26px;}
+  .g-ini-cell{padding:2px 3px;}
+  .g-ini-chips{display:flex;gap:3px;margin-bottom:3px;}
+  .g-chip{font-size:9px;font-family:'DM Mono',monospace;padding:2px 5px;border-radius:4px;border:.5px solid #E2DED5;background:#F0EEE8;color:#9E9B95;cursor:pointer;}
+  .g-chip.on{background:#185FA5;color:#fff;border-color:#185FA5;}
+  .g-chip:hover:not(.on){background:#E8E5DE;color:#4A4845;}
+  .g-date-inp{border:.5px solid #E2DED5;border-radius:5px;padding:3px 4px;font-size:10px;font-family:'DM Mono',monospace;color:#1A1916;background:#fff;width:128px;}
+  .g-date-inp:focus{outline:none;border-color:#185FA5;}
+  .g-prev-info{font-size:10px;font-family:'DM Mono',monospace;color:#9E9B95;padding:2px 0;}
+  .g-ac-wrap{position:relative;width:128px;}
+  .g-ac-inp{border:.5px solid #E2DED5;border-radius:5px;padding:3px 5px;font-size:10px;font-family:'DM Mono',monospace;color:#1A1916;background:#fff;width:100%;}
+  .g-ac-inp:focus{outline:none;border-color:#185FA5;}
+  .g-ac-list{position:absolute;top:100%;left:0;width:200px;background:#fff;border:.5px solid #E2DED5;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:200;max-height:140px;overflow-y:auto;margin-top:2px;display:none;}
+  .g-ac-list.open{display:block;}
+  .g-ac-item{padding:5px 10px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;color:#4A4845;}
+  .g-ac-item:hover{background:#F0EEE8;}
+  .g-dl{padding:0 3px;font-size:11px;font-family:'DM Mono',monospace;color:#E24B4A;font-weight:500;padding-top:4px;}
+  .g-badge{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:5px;border:.5px solid #E2DED5;font-size:10px;cursor:pointer;background:#F0EEE8;margin:0 auto;margin-top:3px;}
+  .g-badge.blk{background:#FDDCDC;border-color:#F7C1C1;}
+  .g-badge.free{background:#EEEAF8;border-color:#D4CFEE;}
+  .g-badge.done{background:#E0F0E8;border-color:#B8DEC9;opacity:.7;}
+  .g-del{display:flex;align-items:center;justify-content:center;color:#9E9B95;font-size:11px;cursor:pointer;opacity:.3;padding-top:4px;}
+  .g-del:hover{opacity:1;color:#E24B4A;}
+  .g-add-t{padding:6px 12px;font-size:11px;font-family:'DM Mono',monospace;color:#9E9B95;cursor:pointer;display:flex;align-items:center;gap:5px;border-top:.5px solid #E2DED5;}
+  .g-add-t:hover{color:#185FA5;background:rgba(24,95,165,.04);}
+  .g-add-sub{padding:5px 12px 5px 46px;font-size:10px;font-family:'DM Mono',monospace;color:#9E9B95;cursor:pointer;border-top:.5px dashed #E2DED5;background:rgba(0,0,0,.01);}
+  .g-add-sub:hover{color:#7F77DD;}
+  .g-add-ph{padding:10px 16px;font-size:11px;font-family:'DM Mono',monospace;color:#9E9B95;cursor:pointer;border-top:1px solid #E2DED5;}
+  .g-add-ph:hover{color:#185FA5;background:rgba(24,95,165,.04);}
+  .g-mhdr{display:flex;background:#F0EEE8;border-bottom:.5px solid #E2DED5;position:sticky;top:0;z-index:10;}
+  .g-mc{border-right:.5px solid #E2DED5;text-align:center;font-size:10px;font-family:'DM Mono',monospace;color:#9E9B95;padding:4px 0;flex-shrink:0;}
+  .g-ph-row{height:32px;background:#F0EEE8;border-bottom:.5px solid #E2DED5;position:relative;}
+  .g-tr{height:40px;border-bottom:.5px solid #E2DED5;position:relative;}
+  .g-tr:hover{background:rgba(0,0,0,.01);}
+  .g-sub-row{background:rgba(0,0,0,.015);}
+  .g-bar{position:absolute;height:12px;top:14px;border-radius:3px;}
+  .g-bar.blk{background:#E24B4A;}
+  .g-bar.free{background:#7F77DD;}
+  .g-bar.done{background:#2D6A4F;opacity:.55;}
+  .g-bar-collapsed{background:#9E9B95 !important;opacity:.4;height:8px;top:16px;border-radius:10px;}
+  .g-vl{position:absolute;top:0;bottom:0;width:1.5px;pointer-events:none;}
+  .g-tod{background:#185FA5;opacity:.3;}
+  .g-tgt{background:#2D6A4F;opacity:.35;}
+  .g-tlbl{position:absolute;top:-13px;font-size:8px;font-family:'DM Mono',monospace;font-weight:700;transform:translateX(-50%);}
+  .g-tod-lbl{color:#185FA5;}
+  .g-tgt-lbl{color:#2D6A4F;}
+
+
+  
+
+
+
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <h1>Garland Innovation</h1>
+    <div class="sub">Project Tracker — Marketing & Innovation</div>
+  </div>
+  <div class="header-meta">
+    <strong id="today-date"></strong>
+    11 proyectos activos
+  </div>
+</div>
+
+<!-- PHASE FILTER -->
+
+
+
+
+<!-- OWNER FILTER -->
+
+
+
+
+<div class="filter-bar">
+  <span class="filter-label">Fase:</span>
+  <button class="filter-btn active" onclick="filterProjects('all',this)">Todos</button>
+  <button class="filter-btn" onclick="filterProjects('launch',this)">🚀 Launch</button>
+  <button class="filter-btn" onclick="filterProjects('capability',this)">⚙️ Capability</button>
+  <button class="filter-btn" onclick="filterProjects('idea',this)">💡 Idea</button>
+  <button class="filter-btn" onclick="filterProjects('tech',this)">🎓 Cornell R&D</button>
+</div>
+<div class="filter-bar" style="border-top:1px solid var(--border);">
+  <span class="filter-label">Owner:</span>
+  <button class="filter-btn owner-btn active" onclick="filterByOwner('all',this)">Todos</button>
+  <button class="filter-btn owner-btn" onclick="filterByOwner('felicitas',this)">Felicitas</button>
+  <button class="filter-btn owner-btn" onclick="filterByOwner('ale',this)">Ale</button>
+  <button class="filter-btn owner-btn" onclick="filterByOwner('guille',this)">Guille</button>
+  <button class="filter-btn owner-btn" onclick="filterByOwner('luis',this)">Luis</button>
+  <button class="filter-btn owner-btn" onclick="filterByOwner('fer',this)">Fer</button>
+  <button class="filter-btn owner-btn" onclick="filterByOwner('fede',this)">Fede</button>
+  <button class="filter-btn owner-btn" onclick="filterByOwner('alberto',this)">Alberto</button>
+  <button class="filter-btn owner-btn" onclick="filterByOwner('nilly',this)">Nilly</button>
+  <button class="filter-btn owner-btn" onclick="filterByOwner('day',this)">Day</button>
+  <button class="filter-btn owner-btn" onclick="filterByOwner('agencia',this)">Agencia</button>
+  <button class="filter-btn owner-btn" onclick="filterByOwner('cornell',this)">Cornell</button>
+</div>
+<div class="filter-bar" style="border-top:1px solid var(--border);flex-wrap:wrap;">
+  <span class="filter-label">Cards:</span>
+  <button class="filter-btn" onclick="scrollToProjectCard('ginger-pouch')">Ginger Pouch</button>
+  <button class="filter-btn" onclick="scrollToProjectCard('magic-p')">Garlic Powders</button>
+  <button class="filter-btn" onclick="scrollToProjectCard('dados')">Fresh Diced Garlic</button>
+  <button class="filter-btn" onclick="scrollToProjectCard('colgate')">Pastes & Tubes</button>
+  <button class="filter-btn" onclick="scrollToProjectCard('dips')">Fresh Dips & Spreads</button>
+  <button class="filter-btn" onclick="scrollToProjectCard('sausalito')">Fresh Sauces</button>
+  <button class="filter-btn" onclick="scrollToProjectCard('raviolitos-garlic')">Vacuum Bags Garlic</button>
+  <button class="filter-btn" onclick="scrollToProjectCard('raviolitos-ginger')">Vacuum Bags Ginger</button>
+  <button class="filter-btn" onclick="scrollToProjectCard('copitas-garlic')">1 oz Cups Garlic</button>
+  <button class="filter-btn" onclick="scrollToProjectCard('copitas-ginger')">1 oz Cups Ginger</button>
+  <button class="filter-btn" onclick="scrollToProjectCard('shot')">Immunity Shots</button>
+  <button class="filter-btn" onclick="scrollToProjectCard('aspen')">Frozen</button>
+</div>
+<div class="filter-bar" style="border-top:1px solid var(--border);">
+  <span class="filter-label">Gantt:</span>
+  <a href="gantt_tubes_v2.html" target="_blank" class="filter-btn gantt-nav-btn" style="text-decoration:none;">🧴 Tubes</a>
+  <a href="gantt_dados_v2.html" target="_blank" class="filter-btn gantt-nav-btn" style="text-decoration:none;">🧄 Fresh Diced Garlic</a>
+  <span class="filter-btn gantt-nav-btn" style="opacity:.4;cursor:default;">🫙 Fresh Dips & Spreads</span>
+</div>
+<div class="filter-bar" style="border-top:1px solid var(--border);">
+  <span class="filter-label">Tools:</span>
+  <button class="filter-btn" onclick="showTimeline(this)" id="timeline-btn">📅 Timeline</button>
+  <button class="filter-btn" onclick="showBoardView(this)" id="board-btn">📊 Board View</button>
+</div>
+<div class="summary-bar">
+  <div class="summary-card"><div class="num">11</div><div class="lbl">proyectos</div></div>
+  <div class="summary-card"><div class="num" style="color:var(--green)">2</div><div class="lbl">launch</div></div>
+  <div class="summary-card"><div class="num" style="color:#3B82F6">6</div><div class="lbl">capability</div></div>
+  <div class="summary-card"><div class="num" style="color:#F59E0B">3</div><div class="lbl">idea phase</div></div>
+  <div class="summary-card"><div class="num" style="color:#EF4444">3</div><div class="lbl">bloqueados</div></div>
+</div>
+<div class="updated">Última actualización: <span id="update-date"></span></div>
+
+<!-- ══════════════ LAUNCH ══════════════ -->
+<div class="phase-section" id="section-launch">
+  <span class="phase-section-label">🚀 Launch Phase</span>
+  <div class="phase-section-line"></div>
+</div>
+<div class="projects-grid" id="grid-launch">
+
+
+  <!-- GINGER POUCH -->
+  <div class="pcard" id="ginger-pouch" data-phase="launch" data-status="normal" data-owners="alberto nilly felicitas fer ale">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">Ginger Pouch</div><div class="pcard-fantasy">Ginger Pouch 🫚 — 6.5 oz</div></div>
+        <span class="status-pill pill-green">🟢 En comercialización</span>
+      </div>
+      <div class="pcard-launch">Launch: 30 Abr 2026 ✅ — Comercialización activa</div>
+      <div class="meta-row"><span class="phase-tag launch">Launch Phase</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg done"></div><div class="seg done"></div><div class="seg done"></div><div class="seg done"></div><div class="seg active"></div><div class="seg"></div></div>
+      <div class="stage-labels"><span class="stage-lbl done">Concepto</span><span class="stage-lbl done">BC</span><span class="stage-lbl done">Pilot Batch</span><span class="stage-lbl done">Miami</span><span class="stage-lbl active">DSD</span><span class="stage-lbl">Escala</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag">Pouch 6.5 oz</span><span class="tag">Ginger</span><span class="tag">200 cases producidos</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Retailers</div>
+        <div class="tags"><span class="tag">DSD Orlando ✅</span><span class="tag">DSD Miami 🔜</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Next Steps</div>
+        <div class="next-steps">
+          <div class="next-item"><span class="next-n">1.</span><span>Degustaciones Orlando+Miami → 11 May</span><span class="next-owner">Ale/Felicitas</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Lab tests Laboratorio Nova (claim "Fresh for weeks") → 29 May</span><span class="next-owner">Felicitas</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Coordinar logística Miami</span><span class="next-owner">Nilly</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAGIC P -->
+  <div class="pcard" id="magic-p" data-phase="launch" data-status="urgent" data-owners="felicitas ale luis guille fer fede day nilly">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">Garlic Powders</div><div class="pcard-fantasy">Magic P ✨</div></div>
+        <span class="status-pill pill-green">Launch Mayo</span>
+      </div>
+      <div class="pcard-launch">Launch: 10 May 2026 ⚡</div>
+      <div class="meta-row"><span class="phase-tag launch">Launch Phase</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg done"></div><div class="seg done"></div><div class="seg done"></div><div class="seg almost"></div><div class="seg almost"></div><div class="seg active"></div></div>
+      <div class="stage-labels"><span class="stage-lbl done">Concepto</span><span class="stage-lbl done">BC</span><span class="stage-lbl done">Producto</span><span class="stage-lbl almost">Amazon</span><span class="stage-lbl almost">DSD</span><span class="stage-lbl active">Escala</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag">Jars Circulares / Rectangulares con tapa</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">SKUs</div>
+        <div class="tags"><span class="tag done">Garlic Powder 4 oz</span><span class="tag done">Garlic Powder 8.5 oz</span><span class="tag done">Garlic Powder 20 oz</span><span class="tag done">Granulated Garlic 20 oz</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Cases estimados · Disponibles ~25 May</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+          <div style="background:var(--surface2);border:.5px solid var(--border);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:2px;">Powder 4 oz · 12u/case</div>
+            <div style="font-size:15px;font-weight:700;color:#B45309;">63 <span style="font-size:10px;font-weight:400;">cases → DSD</span></div>
+            <div style="font-size:9px;color:var(--text3);margin-top:2px;">Amazon: 24 ✅ · Disponible: ~25 May</div>
+          </div>
+          <div style="background:var(--surface2);border:.5px solid var(--border);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:2px;">Powder 8.5 oz · 12u/case</div>
+            <div style="font-size:15px;font-weight:700;color:#B45309;">75 <span style="font-size:10px;font-weight:400;">cases → DSD</span></div>
+            <div style="font-size:9px;color:var(--text3);margin-top:2px;">Amazon: 48 ✅ · Disponible: ~25 May</div>
+          </div>
+          <div style="background:var(--surface2);border:.5px solid var(--border);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:2px;">Powder 20 oz · 8u/case</div>
+            <div style="font-size:15px;font-weight:700;color:#B45309;">71 <span style="font-size:10px;font-weight:400;">cases → DSD</span></div>
+            <div style="font-size:9px;color:var(--text3);margin-top:2px;">Amazon: 20 ✅ · Disponible: ~25 May</div>
+          </div>
+          <div style="background:var(--surface2);border:.5px solid var(--border);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:2px;">Granulated 20 oz · 8u/case</div>
+            <div style="font-size:15px;font-weight:700;color:#B45309;">86 <span style="font-size:10px;font-weight:400;">cases → DSD</span></div>
+            <div style="font-size:9px;color:var(--text3);margin-top:2px;">Amazon 2: 20 pendiente · Disponible: ~25 May</div>
+          </div>
+        </div>
+        <div style="background:#FEF0D0;border:.5px solid #F5D87A;border-radius:8px;padding:8px 10px;font-size:10px;color:#7A4E0A;line-height:1.6;">
+          <b>⚠️ Resealing pendiente — esperando tapas aluminio:</b><br>
+          • Granulated 20 oz — rehacerse por problema de peso<br>
+          • Powder 8.5 oz — faltante de tapas a completar<br>
+          Est. llegada PC: ~18 May + 7d labelling → <b>listo ~25 May</b>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Aliados</div>
+        <div class="allies">
+          <div class="ally"><div class="ally-dot" style="background:#10B981"></div><div><div class="ally-dept">Supply Chain — Luis Polo</div><div class="ally-detail">Labelling y coordinación con copacker. Tapas aluminio llegan el Viernes — enviar ese día al copacker para resealing. Coordinar nuevo envío producción Mayo.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#EC4899"></div><div><div class="ally-dept">Packaging — Day</div><div class="ally-detail">Coordinar tapas con seal de aluminio (reemplazo seal papel).</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#3B82F6"></div><div><div class="ally-dept">Logística — Nilly</div><div class="ally-detail">Definir distribución remanente entre DSD PC + Miami y coordinar envíos.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#F59E0B"></div><div><div class="ally-dept">Ventas — Ale</div><div class="ally-detail">Canal DSD y Amazon activos. Definir volúmenes y prioridades por destino.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#9CA3AF"></div><div><div class="ally-dept">Operations — Guille</div><div class="ally-detail">Presupuestando máquina de llenado de polvos para proceso interno.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#6366F1"></div><div><div class="ally-dept">Finanzas — Fede</div><div class="ally-detail">BC NASA aprobado.</div></div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Highlights</div>
+        <div class="highlights">
+          <div class="hl success">✅ BC NASA aprobado. 4 SKUs en mercado — Amazon activo.</div>
+          <div class="hl warn">⚠️ Resealing pendiente — tapas aluminio en camino. Est. listo ~25 May.</div>
+          <div class="hl info">📦 63 + 75 + 71 + 86 cases disponibles → distribución DSD PC + Miami a definir con Nilly.</div>
+          <div class="hl info">🧪 Degustaciones de Powders — a planificar con Felicitas.</div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Próximos pasos</div>
+        <div class="nexts">
+          <div class="next-item"><span class="next-n">1.</span><span>✅ Tapas aluminio confirmadas — llegan el Viernes a Miami</span><span class="next-owner">Day</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Ese mismo día — mandar tapas al copacker para terminar resealing</span><span class="next-owner">Luis Polo</span><span style="font-size:10px;font-family:var(--mono);color:#E24B4A;margin-left:auto;padding-left:8px;">→ Viernes</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Labelling y wrapping en PC</span><span class="next-owner">Luis Polo</span><span style="font-size:10px;font-family:var(--mono);color:#E24B4A;margin-left:auto;padding-left:8px;">→ ~25 May</span></div>
+          <div class="next-item"><span class="next-n">4.</span><span>Coordinar nuevo envío al copacker — cantidades a producir en Mayo</span><span class="next-owner">Ale / Luis Polo</span></div>
+          <div class="next-item"><span class="next-n">5.</span><span>Segundo envío Amazon — Granulated 20 cases</span><span class="next-owner">Ale</span></div>
+          <div class="next-item"><span class="next-n">6.</span><span>Definir distribución remanente DSD PC + Miami</span><span class="next-owner">Nilly</span></div>
+          <div class="next-item"><span class="next-n">7.</span><span>Coordinar visita copacker con proveedor labels</span><span class="next-owner">Felicitas / Luis Polo</span></div>
+          <div class="next-item"><span class="next-n">8.</span><span>Evaluar CAPEX máquina llenado de polvos</span><span class="next-owner">Guille</span></div>
+          <div class="next-item"><span class="next-n">9.</span><span>Planificar degustaciones Garlic Powders</span><span class="next-owner">Felicitas</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+</div>
+
+<!-- ══════════════ CAPABILITY ══════════════ -->
+<div class="phase-section" id="section-capability">
+  <span class="phase-sect-label" style="color:#3B82F6;">⚙️ Capability Phase</span>
+</div>
+<div class="projects-grid" id="grid-capability">
+<div class="pcard" id="dados" data-phase="capability" data-status="normal" data-owners="felicitas guille luis ale cornell agencia">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">Fresh Diced Garlic</div><div class="pcard-fantasy">Dados 🧄</div></div>
+        <span class="status-pill pill-amber">Esperando muestras</span>
+      </div>
+      <div class="pcard-launch">Launch: 01 Sep 2026 · DSD 01 Jul 2026 (packaging anterior)</div>
+      <div class="meta-row"><span class="phase-tag capability">Capability Phase</span><span class="bosscard-tag">✓ Bosscard</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg done"></div><div class="seg done"></div><div class="seg done"></div><div class="seg active"></div><div class="seg"></div><div class="seg"></div></div>
+      <div class="stage-labels"><span class="stage-lbl done">Concepto</span><span class="stage-lbl done">BC</span><span class="stage-lbl done">R&D</span><span class="stage-lbl active">Muestras</span><span class="stage-lbl">Scale-up</span><span class="stage-lbl">Launch</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag">5 oz — Flow Pack (plástico)</span><span class="tag warn" style="background:#FAEEDA;color:#7A4E0A;border-color:#F0D49A;">Jar vidrio 4.5 oz o 6 oz — a definir con pruebas ⚠️</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Volúmenes estimados (BC)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="background:var(--surface2);border:.5px solid var(--border);border-radius:8px;padding:10px 12px;">
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:4px;">AÑO 1 — 12 DC · 100 stores/DC · Velocity New 6</div>
+            <div style="font-size:20px;font-weight:700;color:var(--text);">411.798 <span style="font-size:11px;font-weight:400;color:var(--text3);">u</span></div>
+
+          </div>
+          <div style="background:var(--surface2);border:.5px solid var(--border);border-radius:8px;padding:10px 12px;">
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:4px;">AÑO 2 — 15 DC · 100 stores/DC · Velocity Mature 9</div>
+            <div style="font-size:20px;font-weight:700;color:var(--text);">749.840 <span style="font-size:11px;font-weight:400;color:var(--text3);">u</span></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Highlights</div>
+        <div class="highlights">
+          <div class="hl success" style="font-size:13px;font-weight:600;border-left-width:4px;">🚀 Nuevo lanzamiento DSD 1 de Julio con packaging anterior — 6.000 packs de stock disponibles.</div>
+          <div class="hl info">🧪 Nuevo proceso propuesto por Cornell — blanching a T ambiente con ácido cítrico 5% + steam blanch 100% steam 212°F en combi oven.</div>
+          <div class="hl warn">📅 Degustación Miércoles 27/05 — definir si se aprueban sabores y avanzamos con Operaciones.</div>
+          <div class="hl success">🫙 Jar de vidrio gustó — avanzar con etiquetas. Ver de redefinir peso SKU a 4.8 oz.</div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Próximos pasos</div>
+        <div class="nexts">
+          <div class="next-item"><span class="next-n">1.</span><span>Degustación FDG con nuevo proceso Cornell</span><span class="next-owner">Felicitas</span><span style="font-size:10px;font-family:var(--mono);color:#E24B4A;margin-left:auto;padding-left:8px;">→ 27 May</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Arrancar diseño etiqueta jar de vidrio (alto 5-5.5 cm), definir largo y color de tapa (blanco, negro, plateado o dorado) — precio jar aún no confirmado</span><span class="next-owner">Agencia/Luis</span><span style="font-size:10px;font-family:var(--mono);color:#E24B4A;margin-left:auto;padding-left:8px;">→ 29 May</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Plastic Bag — diseño aprobado, readaptando planos. Una vez adaptados: listo para impresión final + lote digital 100 copias</span><span class="next-owner">Agencia/Luis</span></div>
+          <div class="next-item"><span class="next-n">4.</span><span>Operaciones enviando muestras para Urschell</span><span class="next-owner">Guille</span><span style="font-size:10px;font-family:var(--mono);color:#E24B4A;margin-left:auto;padding-left:8px;">→ 22 May</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard" id="colgate" data-phase="capability" data-status="normal" data-owners="felicitas guille luis cornell agencia">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">Pastes & Tubes</div><div class="pcard-fantasy">Colgate 🧴</div></div>
+        <span class="status-pill pill-amber">Esperando pasta base</span>
+      </div>
+      <div class="pcard-launch">Launch: 01 Oct 2026</div>
+      <div class="meta-row"><span class="phase-tag capability">Capability Phase</span><span class="bosscard-tag">✓ Bosscard</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg done"></div><div class="seg done"></div><div class="seg active"></div><div class="seg active"></div><div class="seg"></div><div class="seg"></div></div>
+      <div class="stage-labels"><span class="stage-lbl done">Concepto</span><span class="stage-lbl done">BC</span><span class="stage-lbl active">Formulación</span><span class="stage-lbl active">Packaging</span><span class="stage-lbl">Scale-up</span><span class="stage-lbl">Launch</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag">Tubos 3.5 oz</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">SKUs</div>
+        <div class="tags"><span class="tag">Garlic Paste</span><span class="tag done">Garlic Habanero ✓</span><span class="tag done">Garlic Cilantro ✓</span><span class="tag">Roasted Garlic</span><span class="tag progress">Caramelized Shallots →</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Aliados</div>
+        <div class="allies">
+          <div class="ally"><div class="ally-dot" style="background:#3B82F6"></div><div><div class="ally-dept">R&D — Cornell University</div><div class="ally-detail">Formulación de pasta base y adaptación de SKUs (Habanero, Cilantro, Garlic Paste, Roasted). BLOCKER principal del proyecto.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#EC4899"></div><div><div class="ally-dept">Comunicación — Agencia</div><div class="ally-detail">Diseño en curso desde 01 Abr. Pendiente planos finales para cerrar arte e ir a impresión.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#10B981"></div><div><div class="ally-dept">Supply Chain — Luis</div><div class="ally-detail">Confirmar tapa roja, compra de selladora y desarrollo de Display Shelf. Coordina impresión y flete.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#9CA3AF"></div><div><div class="ally-dept">Operations — Guille</div><div class="ally-detail">Prueba de selladora en planta y Pilot Test final antes del launch.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#F59E0B"></div><div><div class="ally-dept">Food Quality / Sourcing — Fer</div><div class="ally-detail">Food Safety Approval de formulaciones y Sourcing de ingredientes en paralelo con flete.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#6366F1"></div><div><div class="ally-dept">Finanzas — Fede</div><div class="ally-detail">Final Business Case una vez confirmada la formulación.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#2D6A4F"></div><div><div class="ally-dept">Plantcity — Alberto</div><div class="ally-detail">Pilot Test en Planta — último paso antes del launch.</div></div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Highlights</div>
+        <div class="highlights">
+          <div class="hl warn">⚠️ Reunión Cornell 18/05 — viscosidad, densidad, pruebas tubos, selladora Cornell. Cumplida.</div>
+          <div class="hl info">⚙️ Reunión Guille + Cornell — definir proceso blanching y operacionalización.</div>
+          <div class="hl success">🎉 Prototipo Fancy Food Show encarado — tubos de Luis van llenos.</div>
+          <div class="hl info">🔧 Definir tamaño orificio con Cornell — 0.5, 1.5 o 2 cm.</div>
+          <div class="hl success">✅ Luis envió link de selladora a Cornell para que la compren.</div>
+          <div class="hl warn">📦 Coordinar envío tubos + muestras a Cornell — Luis Moreno.</div>
+          <div class="hl warn">🖼️ Display Shelf — PENDIENTE ALE ⚠️</div>
+          <div class="hl info">🧪 Sabores definiéndose — Garlic Paste y Roasted Garlic prueba el Miércoles 27. Próximas: Cilantro, Habanero y Shallots Caramelized. Ginger Paste en segunda instancia.</div>
+          <div class="hl info">🔧 Tapa roja actualizada a Flip Cap — Luis buscando presupuestos · Selladora llega fin de mes.</div>
+          <div class="hl info">📊 Revisar volúmenes Business Case.</div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Próximos pasos</div>
+        <div class="nexts">
+<div id="nextsteps-tubes"><div class="next-item"><span class="next-n">1.</span><span>Terminar formulación de cada SKU y Shelf Life</span><span class="next-owner">Cornell</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Probar sabores interna o externamente</span><span class="next-owner">Felicitas</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Adaptar formulación Habanero y Cilantro a nueva pasta base</span><span class="next-owner">Cornell</span></div>
+          <div class="next-item"><span class="next-n">4.</span><span>Desarrollar Display Shelf</span><span class="next-owner">Luis</span></div>
+          <div class="next-item"><span class="next-n">5.</span><span>Conseguir tubo 3.5 oz tapa roja + hacer pruebas</span><span class="next-owner">Luis</span></div>
+          <div class="next-item"><span class="next-n">6.</span><span>Comprar selladora y prueba en planta</span><span class="next-owner">Luis</span></div>
+          <div class="next-item"><span class="next-n">7.</span><span>Mandar planos a Agencia para diseño final</span><span class="next-owner">Luis</span></div>
+        </div></div>
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- TOUM -->
+  <div class="pcard" id="dips" data-phase="capability" data-status="normal" data-owners="felicitas guille fer luis">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">Fresh Dips and Spreads</div><div class="pcard-fantasy">Toum 🫙</div></div>
+        <span class="status-pill pill-amber">Pruebas internas</span>
+      </div>
+      <div class="pcard-launch">Launch: 01 Dic 2026</div>
+      <div class="meta-row"><span class="phase-tag capability">Capability Phase</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg done"></div><div class="seg done"></div><div class="seg active"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
+      <div class="stage-labels"><span class="stage-lbl done">Concepto</span><span class="stage-lbl done">BC</span><span class="stage-lbl active">Formulación</span><span class="stage-lbl">Proceso</span><span class="stage-lbl">Packaging</span><span class="stage-lbl">Launch</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag warn" style="background:#FAEEDA;color:#7A4E0A;border-color:#F0D49A;">HPP o no-HPP según SKU — a confirmar con Luis ⚠️</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">SKUs</div>
+        <div class="tags"><span class="tag active">Garlic & Lemon ← arrancando</span><span class="tag">Garlic Hummus</span><span class="tag">French Onion / Fresh Shallots</span><span class="tag">Garlic Paste</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Aliados</div>
+        <div class="allies">
+          <div class="ally"><div class="ally-dot" style="background:#9CA3AF"></div><div><div class="ally-dept">Formulación</div><div class="ally-detail">Pruebas internas Garlic Lemon Dip avanzadas. Guille: OK microbiológico. Feli: sabor aceptado. Falta textura. Cerca de formulación final SKU 1.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#10B981"></div><div><div class="ally-dept">Supply Chain — Luis</div><div class="ally-detail">Muestras envases llegan fin de mes. Luis envía packaging Ithaca/Miami Twist a China para duplicarlo.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#F59E0B"></div><div><div class="ally-dept">Food Safety — Fer</div><div class="ally-detail">Estudios microbiológicos OK. Negativos: Coliformes, E. Coli, Mold/Yeast, Salmonella y Listeria. pH OK.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#3B82F6"></div><div><div class="ally-dept">Copacker Externo — Arden Gardens</div><div class="ally-detail">En evaluación como opción para formulación y proceso. A definir si se usa para algún SKU.</div></div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Highlights</div>
+        <div class="highlights">
+          <div class="hl warn">⚠️ Definir qué SKUs se producen internamente vs copacker (ej: Hummus → posible copacker).</div>
+          <div class="hl warn">⚠️ Evaluación Proceso Interno vs Externo (Mixer Robot Coupe, Llenadora) — ver factibilidad llenadora cuadrada.</div>
+          <div class="hl info">🫙 Envase solicitado — llegada estimada fin de Mayo.</div>
+          <div class="hl info">🏭 Posibles copackers: Arden Gardens y Dixie Catering Miami.</div>
+          <div class="hl warn">⏳ Arden Gardens — esperando muestras para validar proceso y Labor Cost.</div>
+          <div class="hl warn">📅 Dixie Catering — visita Feli 22 de Mayo.</div>
+        </div>
+      </div>
+      
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Próximos pasos</div>
+        <div class="nexts">
+          <div class="next-item"><span class="next-n">1.</span><span>Pruebas internas formulación Garlic & Lemon — definir sabor</span><span class="next-owner">Felicitas / Guille</span><span style="font-size:10px;font-family:var(--mono);color:#E24B4A;margin-left:auto;padding-left:8px;">→ HOY</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Degustación interna — validar sabor y textura</span><span class="next-owner">Felicitas / Guille</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Ver factibilidad llenadora cuadrada — definir si proceso es interno o copacker</span><span class="next-owner">Guille</span></div>
+          <div class="next-item"><span class="next-n">4.</span><span>Estimar tiempos y compra de equipos necesarios</span><span class="next-owner">Guille</span></div>
+          <div class="next-item"><span class="next-n">5.</span><span>Definir qué SKUs se hacen internamente vs copacker (ej: Hummus)</span><span class="next-owner">Felicitas / Guille</span></div>
+          <div class="next-item"><span class="next-n">6.</span><span>Cotizar envases HPP y no-HPP con Luis — definir por SKU</span><span class="next-owner">Luis</span></div>
+          <div class="next-item"><span class="next-n">7.</span><span>Evaluar Arden Gardens como opción de lab externo</span><span class="next-owner">Felicitas</span></div>
+          <div class="next-item"><span class="next-n">8.</span><span>Food Safety + SC Approval — una vez definido packaging y formulación</span><span class="next-owner">Fer</span></div>
+          <div class="next-item"><span class="next-n">9.</span><span>Pilot Test</span><span class="next-owner">Felicitas / Guille / Alberto</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="pcard" id="raviolitos-garlic" data-phase="capability" data-status="blocked" data-owners="guille fer felicitas agencia luis">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">Vacuum Bags Garlic</div><div class="pcard-fantasy">Raviolitos Garlic 🧄</div></div>
+        <span class="status-pill pill-red">Bloqueado — vacío</span>
+      </div>
+      <div class="pcard-launch">Launch: 01 Sep 2026 · DSD 01 Jul 2026 (packaging anterior)</div>
+      <div class="meta-row"><span class="phase-tag capability">Capability Phase</span><span class="bosscard-tag">✓ Bosscard</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg done"></div><div class="seg done"></div><div class="seg blocked"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
+      <div class="stage-labels"><span class="stage-lbl done">Concepto</span><span class="stage-lbl done">BC</span><span class="stage-lbl blocked">Proceso/Vacío</span><span class="stage-lbl">Packaging</span><span class="stage-lbl">Scale-up</span><span class="stage-lbl">Launch</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag">Bolsa de vacío 5 oz total</span><span class="tag">5 bolsas internas 1 oz c/u</span><span class="tag">Peeled Garlic</span><span class="tag">BC light ✓</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Aliados</div>
+        <div class="allies">
+          <div class="ally"><div class="ally-dot" style="background:#9CA3AF"></div><div><div class="ally-dept">Operations (Guille)</div><div class="ally-detail">Desarrollando tecnología y proceso de vacío. Buscando equipamiento — posible importación China. Evaluando maquinaria dosificadora.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#EC4899"></div><div><div class="ally-dept">Comunicación — Agencia</div><div class="ally-detail">Rediseño del envase una vez resuelto el proceso.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#F59E0B"></div><div><div class="ally-dept">Food Quality (Fer)</div><div class="ally-detail">Realizará Shelf Life una vez resuelto el vacío.</div></div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Highlights</div>
+        <div class="highlights">
+          <div class="hl alert">🔴 Bloqueante: vacío no supera 2 semanas. Nueva sospecha — pérdida de cadena de frío como causa de ineficiencia del proceso.</div>
+          <div class="hl warn">⚠️ Se evaluará inmersión en solución ácida para asegurar inocuidad del producto (especialmente por CB).</div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Próximos pasos</div>
+        <div class="nexts">
+          <div class="next-item"><span class="next-n">1.</span><span>✅ Guille envió muestras de envases a China — dimensionando bolsa y máquina</span><span class="next-owner">Guille</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Obtener estimado de tiempos de China — ¿cuándo tendrían definición y cuándo llegaría la máquina?</span><span class="next-owner">Guille</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Con esa info, decidir si se procede con el proyecto</span><span class="next-owner">Felicitas</span></div>
+          <div class="next-item"><span class="next-n">4.</span><span>Verificar tamaño de bolsa interna 1 oz</span><span class="next-owner">Luis</span></div>
+          <div class="next-item"><span class="next-n">5.</span><span>Ver tema bolsa 5 oz — ¿misma que 6 oz cambiando solo el label?</span><span class="next-owner">Luis</span></div>
+          <div class="next-item"><span class="next-n">6.</span><span>Rediseñar envase</span><span class="next-owner">Agencia</span></div>
+          <div class="next-item"><span class="next-n">7.</span><span>Realizar Shelf Life</span><span class="next-owner">Fer</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RAVIOLITOS GINGER -->
+  <div class="pcard" id="raviolitos-ginger" data-phase="capability" data-status="normal" data-owners="guille fer felicitas">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">Vacuum Bags Ginger</div><div class="pcard-fantasy">Raviolitos Ginger 🫚</div></div>
+        <span class="status-pill pill-gray">Proveedor en pruebas</span>
+      </div>
+      <div class="pcard-launch">Launch: 01 Sep 2026 · DSD 01 Jul 2026 (packaging anterior)</div>
+      <div class="meta-row"><span class="phase-tag capability">Capability Phase</span><span class="bosscard-tag">✓ Bosscard</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg done"></div><div class="seg early"></div><div class="seg early"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
+      <div class="stage-labels"><span class="stage-lbl done">Concepto</span><span class="stage-lbl early">BC</span><span class="stage-lbl early">Proceso</span><span class="stage-lbl">Packaging</span><span class="stage-lbl">Scale-up</span><span class="stage-lbl">Launch</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag">Bolsa de vacío 5 oz total</span><span class="tag">5 bolsas internas 1 oz c/u</span><span class="tag">Peeled Ginger — viene de Perú</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Aliados</div>
+        <div class="allies">
+          <div class="ally"><div class="ally-dot" style="background:#3B82F6"></div><div><div class="ally-dept">Sourcing — Proveedor Perú</div><div class="ally-detail">Realiza pelado y envasado al vacío del ginger. En pruebas actualmente.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#9CA3AF"></div><div><div class="ally-dept">Operations (Guille)</div><div class="ally-detail">Recibirá ginger pelado de Perú y lo empacará en bolsa final 5 oz en Garland.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#F59E0B"></div><div><div class="ally-dept">Food Quality (Fer)</div><div class="ally-detail">Realizará Shelf Life y vida útil del producto.</div></div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Highlights</div>
+        <div class="highlights">
+          <div class="hl info">⏳ Proyecto dependiente del proveedor de Perú. Sin ginger pelado no se puede avanzar.</div>
+          <div class="hl open">📋 Business case pendiente.</div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Próximos pasos</div>
+        <div class="nexts">
+          <div class="next-item"><span class="next-n">1.</span><span>Confirmar envío de ginger pelado desde Perú</span><span class="next-owner">Fer</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Verificar tamaño de bolsa interna 1 oz</span><span class="next-owner">Luis</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Ver tema bolsa 5 oz — ¿es la misma que la de 6 oz cambiando solo el label?</span><span class="next-owner">Luis</span></div>
+          <div class="next-item"><span class="next-n">4.</span><span>Realizar empaque y vida útil del producto</span><span class="next-owner">Fer / Guille</span></div>
+          <div class="next-item"><span class="next-n">5.</span><span>Definir proceso de llenado</span><span class="next-owner">Guille</span></div>
+          <div class="next-item"><span class="next-n">6.</span><span>Armar Business Case</span><span class="next-owner">Felicitas</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COPITAS GARLIC -->
+  <div class="pcard" id="copitas-garlic" data-phase="capability" data-status="blocked" data-owners="luis guille felicitas fer">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">1 oz Cups — Garlic</div><div class="pcard-fantasy">Copitas Garlic 🧄</div></div>
+        <span class="status-pill pill-red">Bloqueado — MAP</span>
+      </div>
+      <div class="pcard-launch">Launch: 01 Ago 2026</div>
+      <div class="meta-row"><span class="phase-tag capability">Capability Phase</span><span class="bosscard-tag">✓ Bosscard</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg done"></div><div class="seg early"></div><div class="seg blocked"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
+      <div class="stage-labels"><span class="stage-lbl done">Concepto</span><span class="stage-lbl early">BC</span><span class="stage-lbl blocked">MAP</span><span class="stage-lbl">Packaging</span><span class="stage-lbl">Shelf Life</span><span class="stage-lbl">Launch</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag">Copa 1 oz con tapa</span><span class="tag">Peeled Garlic</span><span class="tag">Ref: Gourmet Garden</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Aliados</div>
+        <div class="allies">
+          <div class="ally"><div class="ally-dot" style="background:#10B981"></div><div><div class="ally-dept">Packaging (Luis)</div><div class="ally-detail">Cotización recibida. Evaluando film poroso o microperforado. Prototipo pendiente. A cargo del display y prototipo.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#EC4899"></div><div><div class="ally-dept">Comunicación — Agencia</div><div class="ally-detail">Diseñará artes una vez recibido el planograma.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#9CA3AF"></div><div><div class="ally-dept">Operations (Guille)</div><div class="ally-detail">Evaluará proceso de llenado: manual vs. maquinaria dosificadora.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#F59E0B"></div><div><div class="ally-dept">Food Quality (Fer)</div><div class="ally-detail">Realizará pruebas de Shelf Life con el prototipo final.</div></div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Highlights</div>
+        <div class="highlights">
+          <div class="hl alert">🔴 Complejidad operativa: envase requiere MAP con inyección de nitrógeno — proceso no es manual simple. Demora el proyecto.</div>
+          <div class="hl info">⏳ Luis recibirá nuevas muestras del envase y avisará cuando las tenga.</div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Próximos pasos</div>
+        <div class="nexts">
+          <div class="next-item"><span class="next-n">1.</span><span>Definir envase, film y eficiencia de termosellado</span><span class="next-owner">Luis</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Desarrollar display y prototipo</span><span class="next-owner">Luis</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Armar Business Case</span><span class="next-owner">Felicitas</span></div>
+          <div class="next-item"><span class="next-n">4.</span><span>Definir proceso de llenado (manual vs. dosificadora)</span><span class="next-owner">Guille</span></div>
+          <div class="next-item"><span class="next-n">5.</span><span>Pruebas de Shelf Life con prototipo</span><span class="next-owner">Fer</span></div>
+          <div class="next-item"><span class="next-n">6.</span><span>Armar artes con planograma</span><span class="next-owner">Agencia</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COPITAS GINGER -->
+  <div class="pcard" id="copitas-ginger" data-phase="capability" data-status="blocked" data-owners="luis felicitas fer">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">1 oz Cups — Ginger</div><div class="pcard-fantasy">Copitas Ginger 🫚</div></div>
+        <span class="status-pill pill-red">Bloqueado — MAP</span>
+      </div>
+      <div class="pcard-launch">Launch: 01 Ago 2026</div>
+      <div class="meta-row"><span class="phase-tag capability">Capability Phase</span><span class="bosscard-tag">✓ Bosscard</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg done"></div><div class="seg early"></div><div class="seg blocked"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
+      <div class="stage-labels"><span class="stage-lbl done">Concepto</span><span class="stage-lbl early">BC</span><span class="stage-lbl blocked">MAP</span><span class="stage-lbl">Packaging</span><span class="stage-lbl">Shelf Life</span><span class="stage-lbl">Launch</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag">Copa 1 oz con tapa</span><span class="tag">Peeled Ginger</span><span class="tag">Idéntico a Copitas Garlic</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Aliados</div>
+        <div class="allies">
+          <div class="ally"><div class="ally-dot" style="background:#3B82F6"></div><div><div class="ally-dept">Sourcing — Proveedor Perú</div><div class="ally-detail">Envía ginger pelado. Sin su producto no se puede avanzar.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#10B981"></div><div><div class="ally-dept">Packaging (Luis)</div><div class="ally-detail">Mismo proceso que Copitas Garlic. Display y prototipo a desarrollar.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#EC4899"></div><div><div class="ally-dept">Comunicación — Agencia</div><div class="ally-detail">Adaptará artes de Copitas Garlic.</div></div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Highlights</div>
+        <div class="highlights">
+          <div class="hl info">⏳ Dependiente del proveedor Perú — sin ginger pelado no se puede avanzar.</div>
+          <div class="hl alert">🔴 Mismo que Garlic: envase requiere MAP con inyección de nitrógeno. Demora el proyecto.</div>
+          <div class="hl open">📋 Business case pendiente.</div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Próximos pasos</div>
+        <div class="nexts">
+          <div class="next-item"><span class="next-n">1.</span><span>Confirmar envío de ginger pelado desde Perú</span><span class="next-owner">Fer</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Esperar definición operativa de Copitas Garlic (MAP) y replicar</span><span class="next-owner">Guille</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Armar Business Case</span><span class="next-owner">Felicitas</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════ IDEA ══════════════ -->
+<div class="phase-section" id="section-idea">
+  <span class="phase-section-label">💡 Idea Phase</span>
+  <div class="phase-section-line"></div>
+</div>
+<div class="projects-grid" id="grid-idea">
+
+  <!-- SAUSALITO -->
+  <div class="pcard" id="sausalito" data-phase="idea" data-status="normal" data-owners="felicitas day agencia">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">Fresh Sauces</div><div class="pcard-fantasy">Sausalito 🫙</div></div>
+        <span class="status-pill pill-gray">Etapa temprana</span>
+      </div>
+      <div class="pcard-launch">Launch: 01 Nov 2026</div>
+      <div class="meta-row"><span class="phase-tag idea">Idea / Capability</span><span class="bosscard-tag">✓ Bosscard</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg early"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
+      <div class="stage-labels"><span class="stage-lbl early">Concepto</span><span class="stage-lbl">BC</span><span class="stage-lbl">Formulación</span><span class="stage-lbl">Packaging</span><span class="stage-lbl">Scale-up</span><span class="stage-lbl">Launch</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag warn" style="background:#FAEEDA;color:#7A4E0A;border-color:#F0D49A;">Material y volumen a definir ⚠️</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">SKUs pre-definidos</div>
+        <div class="tags"><span class="tag">Chimichurri (Shallots)</span><span class="tag">Pesto</span><span class="tag">Sofrito</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Aliados</div>
+        <div class="allies">
+          <div class="ally"><div class="ally-dot" style="background:#EC4899"></div><div><div class="ally-dept">R&D — Andreina Protti (Chef, Baires Grill)</div><div class="ally-detail">Formulación de sauces. En diálogo activo.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#9CA3AF"></div><div><div class="ally-dept">R&D — Labs (por definir)</div><div class="ally-detail">En conversaciones con varios labs. Sin cerrar aún.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#3B82F6"></div><div><div class="ally-dept">R&D / HPP — Arden Garden / HPP Fresh Florida</div><div class="ally-detail">Contactos para proceso HPP. A evaluar si se toma esa ruta.</div></div></div>
+          <div class="ally"><div class="ally-dot" style="background:#10B981"></div><div><div class="ally-dept">Packaging (Day)</div><div class="ally-detail">Buscando posibles soluciones de packaging para esta línea.</div></div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Highlights</div>
+        <div class="highlights">
+          <div class="hl warn">⚠️ Si se usa HPP → no puede ser vidrio. Pensando en jar 8 oz apto HPP.</div>
+          <div class="hl open">❓ Business case: pendiente.</div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Próximos pasos</div>
+        <div class="nexts">
+          <div class="next-item"><span class="next-n">1.</span><span>Buscar imágenes de referencia de packaging en el mercado para pedir cotizaciones</span><span class="next-owner">Felicitas</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Buscar posibles soluciones de packaging apto HPP</span><span class="next-owner">Day</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Definir SKUs finales</span><span class="next-owner">Felicitas</span></div>
+          <div class="next-item"><span class="next-n">4.</span><span>Definir si proceso va interno o con lab externo</span><span class="next-owner">Felicitas</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHOT -->
+  <div class="pcard" id="shot" data-phase="idea" data-status="normal" data-owners="felicitas">">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">Immunity Shots</div><div class="pcard-fantasy">Shot 💉</div></div>
+        <span class="status-pill pill-gray">Exploratorio</span>
+      </div>
+      <div class="pcard-launch">Launch: Q2 2027</div>
+      <div class="meta-row"><span class="phase-tag idea">Idea Phase</span><span class="bosscard-tag">✓ Bosscard</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg done"></div><div class="seg early"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
+      <div class="stage-labels"><span class="stage-lbl done">Bosscard</span><span class="stage-lbl early">Evaluación</span><span class="stage-lbl">BC</span><span class="stage-lbl">Formulación</span><span class="stage-lbl">Packaging</span><span class="stage-lbl">Launch</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag">Mini Plastic Bottle — 2 fl oz</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Concepto</div>
+        <div class="tags"><span class="tag">Marca Blanca</span><span class="tag">Cold Pressed</span><span class="tag">Immunity</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Aliados</div>
+        <div class="allies">
+          <div class="ally"><div class="ally-dot" style="background:#3B82F6"></div><div><div class="ally-dept">R&D / Co-man — Arden Gardens</div><div class="ally-detail">Posible socio de marca blanca. Fuerte en Publix con shots cold pressed. Decisión ligada al avance de Toum.</div></div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Highlights</div>
+        <div class="highlights">
+          <div class="hl info">💡 Si avanza Toum con Arden Gardens → se apalanca logística y se facilita este proyecto.</div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Próximos pasos</div>
+        <div class="nexts">
+          <div class="next-item"><span class="next-n">1.</span><span>Armar Business Case</span><span class="next-owner">Felicitas</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Estudio de mercado</span><span class="next-owner">Felicitas</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Evaluar factibilidad del proyecto</span><span class="next-owner">Felicitas</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FROZEN -->
+  <div class="pcard" id="aspen" data-phase="idea" data-status="normal" data-owners="felicitas">">
+    <div class="pcard-top">
+      <div class="pcard-row1">
+        <div><div class="pcard-name">Frozen Garlic & SKUs</div><div class="pcard-fantasy">Aspen ❄️</div></div>
+        <span class="status-pill pill-gray">Muy crudo</span>
+      </div>
+      <div class="pcard-launch">Launch: Q4 2027</div>
+      <div class="meta-row"><span class="phase-tag idea">Idea Phase</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="stages-bar"><div class="seg done"></div><div class="seg early"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
+      <div class="stage-labels"><span class="stage-lbl done">Bosscard</span><span class="stage-lbl early">Exploración</span><span class="stage-lbl">BC</span><span class="stage-lbl">Tecnología</span><span class="stage-lbl">Packaging</span><span class="stage-lbl">Launch</span></div>
+    </div>
+    <div class="pcard-body">
+      <div class="card-section">
+        <div class="section-lbl">Formato</div>
+        <div class="tags"><span class="tag">Hielera 2.8 oz</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">SKUs pre-definidos (cubos)</div>
+        <div class="tags"><span class="tag">Minced Garlic</span><span class="tag">Chimichurri</span><span class="tag">Shallots</span><span class="tag">Roasted Garlic</span><span class="tag">Ginger</span></div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Aliados</div>
+        <div class="allies">
+          <div class="ally"><div class="ally-dot" style="background:#9CA3AF"></div><div><div class="ally-dept">Co-manufacturer (por definir)</div><div class="ally-detail">Opción principal: arrancar con private label vía co-man para evitar inversión en cadena de frío propia.</div></div></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Highlights</div>
+        <div class="highlights">
+          <div class="hl open">❄️ Sin cadena de frío propia ni tecnología de frío.</div>
+          <div class="hl open">📋 Sin business case ni estudio de mercado.</div>
+          <div class="hl info">💡 Opción: private label con co-man como primer paso.</div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="section-lbl">Próximos pasos</div>
+        <div class="nexts">
+          <div class="next-item"><span class="next-n">1.</span><span>Armar Business Case</span><span class="next-owner">Felicitas</span></div>
+          <div class="next-item"><span class="next-n">2.</span><span>Estudio de mercado</span><span class="next-owner">Felicitas</span></div>
+          <div class="next-item"><span class="next-n">3.</span><span>Evaluar factibilidad y co-manufacturers</span><span class="next-owner">Felicitas</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+</div>
+
+<!-- ══════════════ CORNELL ══════════════ -->
+<div class="phase-section" id="section-tech">
+  <span class="phase-section-label">🎓 Cornell Technologies — R&D Estratégico</span>
+  <div class="phase-section-line"></div>
+</div>
+<div class="cornell-section" id="grid-tech">
+  <div class="cornell-card">
+    <div class="cornell-top">
+      <div>
+        <div class="cornell-name">Cornell Technologies</div>
+        <div class="cornell-sub">Motor de innovación estratégica — 2 verticales de investigación</div>
+        <div class="cornell-launch">Entrega esperada: Q1 2027 (según deliverable)</div>
+        <div class="cornell-phase">Technology / R&D — no es un proyecto de launch de producto</div>
+      </div>
+      <span class="cornell-pill">Cornell arrancando</span>
+    </div>
+    <div class="cornell-progress">
+      <div class="stages-bar"><div class="cseg done"></div><div class="cseg active"></div><div class="cseg"></div><div class="cseg"></div><div class="cseg"></div></div>
+      <div class="cornell-slabels"><span class="cornell-slbl done">Scope</span><span class="cornell-slbl active">Cornell trabajando</span><span class="cornell-slbl">Resultados</span><span class="cornell-slbl">Plan impl.</span><span class="cornell-slbl">Ejecución</span></div>
+    </div>
+    <div style="padding:14px 30px; border-bottom:1px solid #C8E6D4;">
+      <div class="allies">
+        <div class="ally" style="background:rgba(255,255,255,0.5)"><div class="ally-dot" style="background:#2D6A4F"></div><div><div class="ally-dept">R&D — Cornell University</div><div class="ally-detail">Lidera ambos verticales. Arrancando. Deliverables a definir en los próximos días.</div></div></div>
+      </div>
+    </div>
+    <div class="cornell-body">
+      <div class="cornell-vertical">
+        <div class="cornell-v-hdr"><span class="cornell-v-num">V1</span><span class="cornell-v-title">Dehydration Technology</span></div>
+        <div class="cornell-tags"><span class="cornell-tag">Ajo N°2 como MP</span><span class="cornell-tag">Garlic Powder</span><span class="cornell-tag">Garlic Flakes RTU</span><span class="cornell-tag">Freeze Drying</span><span class="cornell-tag">Microwave Drying</span></div>
+        <div class="cornell-hl info">🎯 Reutilizar ajo N°2 para obtener MP propia — reducir dependencia de China.</div>
+        <div class="cornell-hl open">❓ Deliverable a definir: ¿proceso interno implementable o evaluación de tecnologías modernas?</div>
+        <div class="cornell-hl impact">💚 Impacta: Magic P (Powders) + línea RTU con MP propia.</div>
+      </div>
+      <div class="cornell-vertical">
+        <div class="cornell-v-hdr"><span class="cornell-v-num">V2</span><span class="cornell-v-title">By-product Valorization</span></div>
+        <div class="cornell-tags"><span class="cornell-tag">Heads, skin & stems</span><span class="cornell-tag">Línea Peeled Garlic</span><span class="cornell-tag">Subproducto actual</span></div>
+        <div class="cornell-hl info">♻️ Encontrar usos rentables para el descarte de la línea de peeled garlic.</div>
+        <div class="cornell-hl open">❓ Aplicaciones y SKUs posibles: a definir con Cornell.</div>
+        <div class="cornell-hl impact">💚 Impacta: sostenibilidad + posible nueva línea de ingresos.</div>
+      </div>
+    </div>
+    <div class="cornell-nexts">
+      <div style="font-size:9px;font-family:var(--mono);color:#5A7A64;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Próximos pasos</div>
+      <div class="cornell-next"><span class="cornell-next-n">1.</span><span>Definir deliverables esperados de ambos verticales</span><span class="cornell-next-owner">Felicitas</span></div>
+      <div class="cornell-next"><span class="cornell-next-n">2.</span><span>Establecer timeline con Cornell</span><span class="cornell-next-owner">Felicitas</span></div>
+      <div class="cornell-next"><span class="cornell-next-n">3.</span><span>Realizar el pago a Cornell para arrancar</span><span class="cornell-next-owner">Fede</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════
+  // CENTRAL PROJECT DATA — Single Source of Truth
+  // Edit here → updates both Card and Gantt
+  // ══════════════════════════════════════════
+  var PROJECTS = {
+    tubes: {
+      name: 'Pastes & Tubes',
+      fantasy: 'Colgate 🧴',
+      launch: new Date(2026, 9, 1),
+      tasks: [
+        // IDEA PHASE (done)
+        {id:'bosscard',  ph:'idea', l:'Bosscard',                      o:'Felicitas',      t:'dn',  fs:new Date(2026,0,5),  d:5},
+        {id:'val',       ph:'idea', l:'Idea & validación de mercado',   o:'Felicitas',      t:'dn',  fs:new Date(2026,0,10), d:22},
+        {id:'bcl',       ph:'idea', l:'Business Case Light',            o:'Felicitas/Fede', t:'dn',  fs:new Date(2026,1,1),  d:14},
+        {id:'gk1',       ph:'idea', l:'Gate Keeping Meeting',           o:'Felicitas',      t:'dn',  fs:new Date(2026,1,15), d:5},
+        // FREE — no afectan cadena crítica
+        {id:'agencia',   ph:'cap',  l:'Agencia — diseño en curso',      o:'Agencia',        t:'free',fs:new Date(2026,3,1),  d:72,  grp:'free'},
+        {id:'tapa',      ph:'cap',  l:'Tapa roja confirmada — verificando pantone con proveedor', o:'Luis', t:'free',fs:new Date(2026,3,30), d:10, grp:'free', adj:true, min:3, max:21, lbl:'Tapa roja (días)'},
+        {id:'selladora', ph:'cap',  l:'Selladora: compra en Amazon + pruebas en planta', o:'Luis/Guille', t:'free',fs:new Date(2026,3,30), d:32, grp:'free', adj:true, min:7, max:60, lbl:'Selladora (días)'},
+        {id:'disp_src_d', ph:'cap', l:'Shelf Ready Case: diseño',        o:'Luis',           t:'free',fs:new Date(2026,3,30), d:32,  grp:'free', adj:true, min:14, max:60,  lbl:'Shelf Ready Case diseño (días)'},
+        {id:'disp_src_f', ph:'cap', l:'Shelf Ready Case: prototipo + fabricación (30d + flete)', o:'Externo', t:'free',dep:'disp_src_d', d:45, grp:'free', adj:true, min:30, max:60, lbl:'Shelf Ready Case fabricación (días)'},
+        {id:'disp_pro',   ph:'cap', l:'Produce Display — update pendiente con Luis', o:'Luis', t:'free',fs:new Date(2026,3,30), d:32, grp:'free'},
+        // BLOCKERS — cadena crítica
+        {id:'formul',    ph:'cap',  l:'Formulación 3 SKUs — Cornell',   o:'Cornell',        t:'blk', fs:new Date(2026,2,1),  d:90,  grp:'blk',  adj:true, min:60, max:120, lbl:'Formulación Cornell (días)'},
+        {id:'shelf',     ph:'cap',  l:'Shelf Life 120d — paralelo',     o:'Fer/Cornell',    t:'sl',  dep:'formul',           d:120, grp:'blk'},
+        {id:'adapt',     ph:'cap',  l:'Adaptar Habanero + Cilantro',    o:'Felicitas',      t:'blk', dep:'formul',           d:5,   grp:'blk',  adj:true, min:3,  max:15,  lbl:'Adaptar SKUs (días)'},
+        {id:'probar',    ph:'cap',  l:'Panel Sensorial Formulaciones',   o:'Felicitas',      t:'blk', dep:'adapt',            d:1,   grp:'blk'},
+        {id:'food_safety',ph:'cap', l:'Food Safety Approval Formulaciones', o:'Fer',         t:'blk', dep:'adapt',            d:2,   grp:'blk'},
+        {id:'planos',    ph:'cap',  l:'Planos Agencia → diseño final',  o:'Luis/Agencia',   t:'blk', dep:'probar',           d:7,   grp:'blk',  adj:true, min:3,  max:14,  lbl:'Diseño final (días)'},
+        {id:'bcf',       ph:'cap',  l:'Final Business Case',            o:'Felicitas/Fede', t:'blk', dep:'probar',           d:7,   grp:'blk'},
+        {id:'sourcing',  ph:'cap',  l:'Sourcing de Ingredientes',       o:'Fer',            t:'blk', dep:'adapt',            d:30,  grp:'blk', adj:true, min:15, max:60, lbl:'Sourcing ingredientes (días)'},
+        {id:'impr',      ph:'cap',  l:'Impresión tubos (35d — FIJO)',   o:'Externo',        t:'blk', dep:'planos',           d:35,  grp:'blk',  adj:true, min:30, max:45,  lbl:'Impresión (días)'},
+        {id:'flete',     ph:'cap',  l:'Flete Miami (60d — FIJO)',       o:'Externo',        t:'blk', dep:'impr',             d:60,  grp:'blk',  adj:true, min:45, max:75,  lbl:'Flete (días)'},
+        {id:'pilot',     ph:'cap',  l:'Pilot Test en Planta',           o:'Felicitas / Luis / Alberto', t:'blk', dep:'flete', d:2,   grp:'blk'},
+        // LAUNCH
+        {id:'sales',     ph:'lnch', l:'Sales Pitch → Marketing/Sales',  o:'Ale',            t:'free',dep:'impr',            d:20,  grp:'free'},
+        {id:'pos',       ph:'lnch', l:'POS / Communication assets',     o:'Agencia',        t:'free',dep:'sales',           d:15,  grp:'free'},
+        {id:'retail',    ph:'lnch', l:'Retailers presentation',         o:'Ale',            t:'free',dep:'flete',           d:10,  grp:'free'},
+        {id:'gk2',       ph:'lnch', l:'Gate Keeping Meeting',           o:'Felicitas',      t:'free',dep:'retail',          d:2,   grp:'free'},
+      ]
+    }
+    ,
+    dips: {
+      name: 'Fresh Dips and Spreads',
+      fantasy: 'Toum 🫙',
+      launch: new Date(2026, 11, 1),
+      tasks: [
+        {id:'dp_bc',      ph:'idea', l:'Business Case',                              o:'Felicitas',         t:'dn',  fs:new Date(2026,0,1),   d:30},
+        {id:'dp_form',    ph:'cap',  l:'Pruebas formulación + degustación interna',  o:'Felicitas/Guille',  t:'blk', fs:new Date(2026,4,7),   d:14,  grp:'blk', adj:true, min:7,  max:30, lbl:'Formulación + degustación (días)'},
+        {id:'dp_proceso', ph:'cap',  l:'Definir proceso productivo (~?)',             o:'Guille',            t:'blk', dep:'dp_form',            d:21,  grp:'blk', adj:true, min:7,  max:60, lbl:'Definir proceso productivo (días)'},
+        {id:'dp_equipos', ph:'cap',  l:'Compra e instalación de equipos (~?)',        o:'Guille',            t:'blk', dep:'dp_proceso',         d:60,  grp:'blk', adj:true, min:30, max:90, lbl:'Compra e instalación equipos (días)'},
+        {id:'dp_skus',    ph:'cap',  l:'Definir SKUs internos vs copacker',           o:'Felicitas/Guille',  t:'blk', dep:'dp_proceso',         d:7,   grp:'blk'},
+        {id:'dp_pkg',     ph:'cap',  l:'Cotizar packaging HPP + no-HPP',              o:'Luis',              t:'free',fs:new Date(2026,4,7),   d:14,  grp:'free'},
+        {id:'dp_arden',   ph:'cap',  l:'Evaluar Arden Gardens como lab externo',      o:'Felicitas',         t:'free',fs:new Date(2026,4,7),   d:21,  grp:'free'},
+        {id:'dp_fs',      ph:'cap',  l:'Food Safety + SC Approval',                  o:'Fer',               t:'free',dep:'dp_pkg',             d:5,   grp:'free'},
+        {id:'dp_pilot',   ph:'lnch', l:'Pilot Test',                                 o:'Felicitas/Guille/Alberto', t:'blk', dep:'dp_equipos',  d:2,   grp:'blk'},
+        {id:'dp_sales',   ph:'lnch', l:'Sales Pitch → Retailers',                    o:'Ale/Agencia',       t:'free',dep:'dp_pilot',           d:14,  grp:'free'},
+      ]
+    }
+    ,
+    ginger: {
+      name: 'Ginger Pouch',
+      fantasy: 'Ginger P 🫚',
+      launch: new Date(2026, 3, 30),
+      tasks: [
+        {id:'g_pilot',     ph:'done', l:'Pilot Batch 200 cases en Plantcity', o:'Alberto',          t:'dn',  fs:new Date(2026,3,30), d:1},
+        {id:'g_receta',    ph:'cap',  l:'Definir receta para degustación',     o:'Felicitas/Agencia', t:'blk', fs:new Date(2026,3,30), d:7,  grp:'blk'},
+        {id:'g_miami',     ph:'cap',  l:'Coordinar y recibir entrega Miami',   o:'Nilly',            t:'blk', fs:new Date(2026,3,30), d:7,  grp:'blk'},
+        {id:'g_dsd',       ph:'cap',  l:'Arrancar DSD Miami',                  o:'Ale',              t:'blk', dep:'g_miami',          d:3,  grp:'blk'},
+        {id:'g_degust',    ph:'cap',  l:'Degustaciones Orlando + Miami',        o:'Ale/Felicitas',    t:'blk', fs:new Date(2026,4,11), d:7,  grp:'blk'},
+        {id:'g_labs',      ph:'cap',  l:'Resultados lab tests — claims packaging', o:'Felicitas',    t:'blk', fs:new Date(2026,4,29), d:1,  grp:'blk'},
+      ]
+    },
+    powders: {
+      name: 'Garlic Powders',
+      fantasy: 'Magic P ✨',
+      launch: new Date(2026, 4, 10),
+      tasks: [
+        {id:'p_tapas',     ph:'cap',  l:'Recibir tapas aluminio → enviar copacker', o:'Day/Luis',   t:'blk', fs:new Date(2026,3,30), d:7,  grp:'blk'},
+        {id:'p_amazon2',   ph:'cap',  l:'Segundo envío Amazon — Granulated 20 cases', o:'Ale',      t:'blk', fs:new Date(2026,3,30), d:5,  grp:'blk'},
+        {id:'p_resealing', ph:'cap',  l:'Resealing en copacker',                o:'Luis',           t:'blk', dep:'p_tapas',          d:7,  grp:'blk'},
+        {id:'p_label',     ph:'cap',  l:'Labelling + wrapping en PC',           o:'Luis',           t:'blk', fs:new Date(2026,4,18), d:7,  grp:'blk'},
+        {id:'p_distrib',   ph:'cap',  l:'Definir distribución DSD PC + Miami',  o:'Nilly',          t:'blk', dep:'p_label',          d:3,  grp:'blk'},
+        {id:'p_copacker',  ph:'cap',  l:'Visita copacker con proveedor labels', o:'Felicitas/Luis', t:'blk', fs:new Date(2026,4,15), d:3,  grp:'blk'},
+        {id:'p_degust',    ph:'cap',  l:'Planificar degustaciones Powders',     o:'Felicitas',      t:'blk', fs:new Date(2026,4,25), d:3,  grp:'blk'},
+      ]
+    },
+    dados: {
+      name: 'Fresh Diced Garlic',
+      fantasy: 'Dados 🧄',
+      launch: new Date(2026, 8, 1),
+      tasks: [
+        // IDEA PHASE (done)
+        {id:'d_bosscard',  ph:'idea', l:'Bosscard',                         o:'Felicitas',      t:'dn',  fs:new Date(2026,0,5),  d:5},
+        {id:'d_val',       ph:'idea', l:'Idea & validación de mercado',      o:'Felicitas',      t:'dn',  fs:new Date(2026,0,10), d:22},
+        {id:'d_bcl',       ph:'idea', l:'Business Case Light',               o:'Felicitas/Fede', t:'dn',  fs:new Date(2026,1,1),  d:14},
+        {id:'d_gk1',       ph:'idea', l:'Gate Keeping Meeting',              o:'Felicitas',      t:'dn',  fs:new Date(2026,1,15), d:5},
+        {id:'d_muestras',  ph:'idea', l:'Muestras Cornell — degustación realizada', o:'Felicitas', t:'dn', fs:new Date(2026,4,1), d:1},
+        {id:'d_feedback',  ph:'idea', l:'Enviar feedback a Cornell — ajuste formulación', o:'Felicitas', t:'dn', fs:new Date(2026,4,2), d:1},
+
+        // FREE — Plástico (corren en paralelo)
+        {id:'d_disp_fp',   ph:'cap',  l:'🟦 Plastic: Diseño Agencia',      o:'Agencia',        t:'free',fs:new Date(2026,3,30), d:15,  grp:'free'},
+        {id:'d_fs_fp',     ph:'cap',  l:'🟦 Plastic: Food Safety + SC Approval', o:'Fer/Luis',  t:'free',dep:'d_disp_fp',       d:5,   grp:'free'},
+        {id:'d_impr_fp',   ph:'cap',  l:'🟦 Plastic: Impresión + Flete (60d)', o:'Externo',    t:'free',dep:'d_fs_fp',          d:60,  grp:'free'},
+
+        // FREE — Glass (corren en paralelo)
+        {id:'d_jar_size',  ph:'cap',  l:'🟩 Glass: Definir tamaño jar con Luis', o:'Luis',      t:'free',fs:new Date(2026,3,30), d:17,  grp:'free'},
+        {id:'d_disp_vid',  ph:'cap',  l:'🟩 Glass: Diseño labels Agencia',  o:'Agencia',        t:'free',dep:'d_jar_size',        d:7,   grp:'free'},
+        {id:'d_fs_vid',    ph:'cap',  l:'🟩 Glass: Food Safety + SC Approval', o:'Fer/Luis',    t:'free',dep:'d_disp_vid',        d:5,   grp:'free'},
+        {id:'d_labels',    ph:'cap',  l:'🟩 Glass: Imprimir labels (15d)',   o:'Externo',        t:'free',dep:'d_fs_vid',          d:15,  grp:'free'},
+        {id:'d_frascos',   ph:'cap',  l:'🟩 Glass: Encargar frascos (15d)', o:'Luis',           t:'free',dep:'d_jar_size',        d:15,  grp:'free', adj:true, min:10, max:30, lbl:'Glass: Frascos (días)'},
+
+        // BLOCKERS — Cadena crítica compartida
+        {id:'d_reunion',   ph:'cap',  l:'Reunión Cornell + Guille — setear proceso', o:'Felicitas/Guille', t:'blk', fs:new Date(2026,4,18), d:1,  grp:'blk', adj:true, min:1, max:1,   lbl:'Reunión Cornell+Guille'},
+        {id:'d_cornell',   ph:'cap',  l:'Cornell: ajuste proceso blanqueo',  o:'Cornell',        t:'blk', dep:'d_reunion',          d:30,  grp:'blk', adj:true, min:14, max:60, lbl:'Cornell ajuste proceso (días)'},
+        {id:'d_shelf',     ph:'cap',  l:'Shelf Life 60d — paralelo',         o:'Fer/Cornell',    t:'sl',  dep:'d_cornell',          d:60,  grp:'blk'},
+        {id:'d_escalar',   ph:'cap',  l:'Escalar operaciones en planta',     o:'Guille',         t:'blk', dep:'d_cornell',          d:60,  grp:'blk', adj:true, min:30, max:90, lbl:'Escalar operaciones (días)'},
+        {id:'d_bcf',       ph:'cap',  l:'Final Business Case',               o:'Felicitas/Fede', t:'free',dep:'d_reunion',          d:7,   grp:'free'},
+
+        // LAUNCH — dos sub-lanzamientos
+        {id:'d_pilot_fp',  ph:'lnch', l:'🟦 Pilot Test — Plastic',         o:'Felicitas/Guille/Alberto', t:'free', dep:'d_escalar', d:2,  grp:'free'},
+        {id:'d_pilot_vid', ph:'lnch', l:'🟩 Pilot Test — Glass',            o:'Felicitas/Guille/Alberto', t:'free', dep:'d_escalar', d:2,  grp:'free'},
+        {id:'d_sales',     ph:'lnch', l:'Sales Pitch → Marketing/Sales',    o:'Ale',                      t:'free', dep:'d_escalar', d:20, grp:'free'},
+        {id:'d_pos',       ph:'lnch', l:'POS / Communication assets',       o:'Agencia',                  t:'free', dep:'d_sales',   d:15, grp:'free'},
+        {id:'d_retail',    ph:'lnch', l:'Retailers presentation',           o:'Ale',                      t:'free', dep:'d_pilot_fp',d:10, grp:'free'},
+        {id:'d_gk2',       ph:'lnch', l:'Gate Keeping Meeting',             o:'Felicitas',                t:'free', dep:'d_retail',  d:2,  grp:'free'},
+      ]
+    }
+  };
+
+  // Render next steps from central data into card
+  function renderCardNextSteps(projectId) {
+    var proj = PROJECTS[projectId];
+    if (!proj) return;
+    var el = document.getElementById('nextsteps-' + projectId);
+    if (!el) return;
+    var pending = proj.tasks.filter(function(t){ return t.t !== 'dn' && t.t !== 'sl'; });
+    var html = '';
+    var n = 1;
+    pending.forEach(function(task) {
+      var dates = calcProjectDates(proj.tasks);
+      var deadline = dates.e[task.id];
+      var dStr = deadline ? '<span style="font-size:10px;font-family:var(--mono);color:#E24B4A;margin-left:auto;padding-left:6px;flex-shrink:0;">→ ' + fmtDate(deadline) + '</span>' : '';
+      var owner = '<span style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-left:6px;">'+task.o+'</span>';
+      html += '<div class="next-item"><span class="next-n">'+n+'.</span><span>'+task.l+owner+'</span>'+dStr+'</div>';
+      n++;
+    });
+    el.innerHTML = html;
+  }
+
+  function fmtDate(d) {
+    var MN=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov'];
+    return d.getDate()+' '+MN[d.getMonth()];
+  }
+
+  function calcProjectDates(tasks) {
+    var NOW = new Date(2026,3,30);
+    var s={}, e={};
+    tasks.forEach(function(t){
+      var start = t.fs ? new Date(t.fs) : (t.dep ? new Date(e[t.dep]) : new Date(NOW));
+      s[t.id] = start;
+      e[t.id] = new Date(start.getTime() + t.d * 864e5);
+    });
+    return {s:s, e:e};
+  }
+
+  // Init card next steps on load
+  window.addEventListener('load', function(){
+    renderCardNextSteps('tubes');
+    // Add fullscreen button to all cards
+    document.querySelectorAll('.pcard').forEach(function(card) {
+      var btn = document.createElement('button');
+      btn.className = 'fullscreen-btn';
+      btn.innerHTML = '⛶';
+      btn.title = 'Pantalla completa';
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        var isFs = card.classList.contains('pcard-fullscreen');
+        if (isFs) {
+          card.classList.remove('pcard-fullscreen');
+          btn.innerHTML = '⛶';
+          btn.title = 'Pantalla completa';
+        } else {
+          card.classList.add('pcard-fullscreen');
+          btn.innerHTML = '✕';
+          btn.title = 'Cerrar';
+          card.scrollTop = 0;
+        }
+      };
+      card.appendChild(btn);
+    });
+  });
+
+
+  const now = new Date();
+  const opts = { year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('today-date').textContent = now.toLocaleDateString('es-AR', opts);
+  document.getElementById('update-date').textContent = now.toLocaleDateString('es-AR', opts);
+
+  var activePhase = 'all';
+  var activeOwner = 'all';
+
+  var ownerLabels = {
+    'felicitas': 'Felicitas',
+    'ale': 'Ale',
+    'guille': 'Guille',
+    'luis': 'Luis',
+    'fer': 'Fer',
+    'fede': 'Fede',
+    'alberto': 'Alberto',
+    'day': 'Day',
+    'agencia': 'Agencia',
+    'cornell': 'Cornell'
+  };
+
+  function applyFilters() {
+    var ids = ['section-launch','section-capability','section-idea','section-tech','grid-launch','grid-capability','grid-idea','grid-tech'];
+    ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=''; });
+
+    if (activePhase === 'launch') {
+      ['section-capability','grid-capability','section-idea','grid-idea','section-tech','grid-tech'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+    } else if (activePhase === 'capability') {
+      ['section-launch','grid-launch','section-idea','grid-idea','section-tech','grid-tech'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+    } else if (activePhase === 'idea') {
+      ['section-launch','grid-launch','section-capability','grid-capability','section-tech','grid-tech'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+    } else if (activePhase === 'tech') {
+      ['section-launch','grid-launch','section-capability','grid-capability','section-idea','grid-idea'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+    } else if (activePhase === 'blocked' || activePhase === 'urgent') {
+      ['section-tech','grid-tech'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+      document.querySelectorAll('.pcard').forEach(function(c){ c.style.display = c.dataset.status === activePhase ? '' : 'none'; });
+      ['launch','capability','idea'].forEach(function(p){
+        var g=document.getElementById('grid-'+p), s=document.getElementById('section-'+p);
+        if(g&&s){ var any=Array.from(g.querySelectorAll('.pcard')).some(function(c){return c.style.display!=='none';}); if(!any){g.style.display='none';s.style.display='none';} }
+      });
+      return;
+    }
+
+    document.querySelectorAll('.pcard').forEach(function(c){ c.style.display=''; });
+
+    if (activeOwner !== 'all') {
+      document.querySelectorAll('.pcard').forEach(function(c){
+        var owners = c.dataset.owners || '';
+        if (owners.indexOf(activeOwner) === -1) c.style.display='none';
+      });
+      ['launch','capability','idea'].forEach(function(p){
+        var g=document.getElementById('grid-'+p), s=document.getElementById('section-'+p);
+        if(g&&s&&g.style.display!=='none'){ var any=Array.from(g.querySelectorAll('.pcard')).some(function(c){return c.style.display!=='none';}); if(!any){g.style.display='none';s.style.display='none';} }
+      });
+    }
+  }
+
+  function highlightOwner(owner) {
+    document.querySelectorAll('.next-item').forEach(function(item){
+      item.classList.remove('highlighted');
+      item.innerHTML = item.innerHTML.replace(/<span class="highlight-owner">(.*?)<\/span>/g,'$1');
+    });
+    document.querySelectorAll('.ally').forEach(function(item){
+      item.style.background='';
+      ['ally-dept','ally-detail'].forEach(function(cls){
+        var el=item.querySelector('.'+cls);
+        if(el) el.innerHTML=el.innerHTML.replace(/<span class="highlight-owner">(.*?)<\/span>/g,'$1');
+      });
+    });
+    if (owner==='all') return;
+    var label = ownerLabels[owner]; if(!label) return;
+    var re = new RegExp('('+label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    document.querySelectorAll('.next-item:not([style*="display: none"])').forEach(function(item){
+      if(item.textContent.toLowerCase().indexOf(label.toLowerCase())!==-1){
+        item.classList.add('highlighted');
+        item.innerHTML=item.innerHTML.replace(re,'<span class="highlight-owner">$1</span>');
+      }
+    });
+    document.querySelectorAll('.ally').forEach(function(item){
+      var found=false;
+      ['ally-dept','ally-detail'].forEach(function(cls){
+        var el=item.querySelector('.'+cls);
+        if(el&&el.textContent.toLowerCase().indexOf(label.toLowerCase())!==-1){
+          el.innerHTML=el.innerHTML.replace(re,'<span class="highlight-owner">$1</span>');
+          found=true;
+        }
+      });
+      if(found) item.style.background='#FFFBEB';
+    });
+  }
+
+  function filterProjects(type, btn) {
+    document.querySelectorAll('.filter-btn:not(.owner-btn)').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    activePhase = type;
+    applyFilters();
+    highlightOwner(activeOwner);
+  }
+
+  function filterByOwner(owner, btn) {
+    document.querySelectorAll('.owner-btn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    activeOwner = owner;
+    applyFilters();
+    highlightOwner(owner);
+  }
+
+  // ── TIMELINE ──
+  var projects = [
+    { name: 'Ginger Pouch', fantasy: 'Ginger P 🫚', launch: new Date(2026, 4, 6), phase: 'launch' },
+    { name: 'Garlic Powders', fantasy: 'Magic P ✨', launch: new Date(2026, 4, 10), phase: 'launch' },
+    { name: 'Fresh Diced Garlic', fantasy: 'Dados 🧄', launch: new Date(2026, 8, 1), phase: 'capability' },
+    { name: 'Vacuum Bags Garlic', fantasy: 'Raviolitos 🧄', launch: new Date(2026, 8, 1), phase: 'blocked' },
+    { name: 'Vacuum Bags Ginger', fantasy: 'Raviolitos Ginger 🫚', launch: new Date(2026, 8, 1), phase: 'capability' },
+    { name: '1 oz Cups Garlic', fantasy: 'Copitas 🧄', launch: new Date(2026, 8, 1), phase: 'blocked' },
+    { name: '1 oz Cups Ginger', fantasy: 'Copitas Ginger 🫚', launch: new Date(2026, 8, 1), phase: 'blocked' },
+    { name: 'Pastes & Tubes', fantasy: 'Colgate 🧴', launch: new Date(2026, 9, 1), phase: 'capability' },
+    { name: 'Fresh Sauces', fantasy: 'Sausalito 🫙', launch: new Date(2026, 10, 1), phase: 'idea' },
+    { name: 'Fresh Dips & Spreads', fantasy: 'Toum 🫙', launch: new Date(2027, 0, 1), phase: 'capability' },
+    { name: 'Immunity Shots', fantasy: 'Shot 💉', launch: new Date(2027, 3, 1), phase: 'idea' },
+    { name: 'Frozen Garlic & SKUs', fantasy: 'Aspen ❄️', launch: new Date(2027, 9, 1), phase: 'idea' },
+  ];
+
+  function buildTimeline() {
+    var canvas = document.getElementById('tl-canvas');
+    canvas.innerHTML = '';
+    var today = new Date();
+    var start = new Date(2026, 3, 1);
+    var end = new Date(2028, 0, 1);
+    var totalMs = end - start;
+
+    // Level colors — 6 levels alternating above/below
+    var levelColors = {
+      '3':  '#2D6A4F',
+      '2':  '#3B82F6',
+      '1':  '#7C3AED',
+      '-1': '#D97706',
+      '-2': '#DB2777',
+      '-3': '#0891B2'
+    };
+    var monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+    function pct(date) { return Math.max(1, Math.min(99, (date - start) / totalMs * 100)); }
+    function shortDate(d) { return d.getDate() + '/' + (d.getMonth()+1); }
+
+    var sorted = projects.slice().sort(function(a,b){ return a.launch - b.launch; });
+
+    // Assign levels smartly — group close dates to different levels
+    var levelSeq = [3, -1, 2, -2, 1, -3, 3, -1, 2, -2, 1, -3];
+    sorted.forEach(function(p, i){ p.level = levelSeq[i % levelSeq.length]; });
+
+    var stemH = { '3':110, '2':75, '1':40, '-1':40, '-2':75, '-3':110 };
+
+    canvas.style.cssText = 'position:relative;padding:150px 50px 150px;overflow-x:auto;min-width:900px;box-sizing:border-box;';
+    var W = Math.max(750, canvas.offsetWidth - 100);
+
+    // Main line
+    var line = document.createElement('div');
+    line.style.cssText = 'position:absolute;left:50px;height:2px;background:#CCC8BE;border-radius:1px;top:50%;transform:translateY(-50%);';
+    line.style.width = W + 'px';
+    canvas.appendChild(line);
+
+    // Month ticks — small marks only
+    var m = new Date(start);
+    while (m <= end) {
+      var p = pct(m);
+      var isJan = m.getMonth() === 0;
+      var isCurrent = m.getMonth() === today.getMonth() && m.getFullYear() === today.getFullYear();
+
+      var tick = document.createElement('div');
+      tick.style.cssText = 'position:absolute;width:1px;transform:translateX(-50%);background:' + (isCurrent ? '#3B82F6' : '#E2DED5') + ';';
+      tick.style.left = (50 + p/100*W) + 'px';
+      tick.style.top = 'calc(50% - ' + (isJan ? 10 : 5) + 'px)';
+      tick.style.height = (isJan ? 20 : 10) + 'px';
+      canvas.appendChild(tick);
+
+      if (isJan || isCurrent) {
+        var mlbl = document.createElement('div');
+        mlbl.style.cssText = 'position:absolute;font-size:9px;font-family:var(--mono);transform:translateX(-50%);top:calc(50% + 16px);white-space:nowrap;color:' + (isCurrent ? '#3B82F6' : '#9E9B95') + ';' + (isJan ? 'font-weight:600;' : '') + (isCurrent ? 'font-weight:700;' : '');
+        mlbl.style.left = (50 + p/100*W) + 'px';
+        mlbl.textContent = isCurrent ? 'HOY' : String(m.getFullYear());
+        canvas.appendChild(mlbl);
+      }
+      m = new Date(m.getFullYear(), m.getMonth() + 1, 1);
+    }
+
+    // Today line
+    if (today >= start && today <= end) {
+      var tp = pct(today);
+      var tl = document.createElement('div');
+      tl.style.cssText = 'position:absolute;width:2px;background:#EF4444;opacity:0.6;transform:translateX(-50%);border-radius:1px;top:10%;height:80%;';
+      tl.style.left = (50 + tp/100*W) + 'px';
+      canvas.appendChild(tl);
+    }
+
+    // Project boxes
+    sorted.forEach(function(proj) {
+      var p = pct(proj.launch);
+      var x = 50 + p/100*W;
+      var level = proj.level;
+      var color = levelColors[String(level)] || '#6B7280';
+      var sh = stemH[String(level)] || 60;
+      var above = level > 0;
+
+      // Stem
+      var stem = document.createElement('div');
+      stem.style.cssText = 'position:absolute;width:1px;background:' + color + ';opacity:0.25;transform:translateX(-50%);height:' + sh + 'px;';
+      stem.style.left = x + 'px';
+      stem.style[above ? 'bottom' : 'top'] = 'calc(50% + 1px)';
+      canvas.appendChild(stem);
+
+      // Dot on line
+      var dot = document.createElement('div');
+      dot.style.cssText = 'position:absolute;width:8px;height:8px;border-radius:50%;background:' + color + ';border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.15);transform:translate(-50%,-50%);top:50%;z-index:3;';
+      dot.style.left = x + 'px';
+      canvas.appendChild(dot);
+
+      // Label box
+      var box = document.createElement('div');
+      box.style.cssText = 'position:absolute;transform:translateX(-50%);background:' + color + ';color:white;border-radius:6px;padding:4px 8px;text-align:center;z-index:4;box-shadow:0 2px 8px rgba(0,0,0,0.12);cursor:default;transition:transform 0.15s;white-space:nowrap;';
+      box.style.left = x + 'px';
+      box.style[above ? 'bottom' : 'top'] = 'calc(50% + ' + (sh + 6) + 'px)';
+      box.onmouseenter = function(){ this.style.transform = 'translateX(-50%) scale(1.06)'; };
+      box.onmouseleave = function(){ this.style.transform = 'translateX(-50%) scale(1)'; };
+
+      var nameDiv = document.createElement('div');
+      nameDiv.style.cssText = 'font-size:11px;font-weight:600;line-height:1.2;';
+      nameDiv.textContent = proj.name;
+
+      var dateDiv = document.createElement('div');
+      dateDiv.style.cssText = 'font-size:9px;opacity:0.85;margin-top:2px;font-family:var(--mono);';
+      dateDiv.textContent = shortDate(proj.launch);
+
+      box.appendChild(nameDiv);
+      box.appendChild(dateDiv);
+      canvas.appendChild(box);
+    });
+  }
+
+  function showTimeline(btn) {
+    var isActive = btn.classList.contains('active');
+    if (isActive) {
+      // Hide timeline, restore previous view
+      btn.classList.remove('active');
+      document.getElementById('timeline-view').style.display = 'none';
+      document.querySelectorAll('.phase-section, .projects-grid, .cornell-section').forEach(function(el){ el.style.display = ''; });
+      applyFilters();
+    } else {
+      // Show timeline
+      document.querySelectorAll('.filter-btn:not(.owner-btn)').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      document.querySelectorAll('.phase-section, .projects-grid, .cornell-section').forEach(function(el){ el.style.display = 'none'; });
+      document.getElementById('timeline-view').style.display = 'block';
+      buildTimeline();
+    }
+  }
+
+
+  function showBoardView(btn) {
+    var isActive = btn.classList.contains('active');
+    if (isActive) {
+      btn.classList.remove('active');
+      document.getElementById('board-view').style.display = 'none';
+      document.querySelectorAll('.phase-section, .projects-grid, .cornell-section').forEach(function(el){ el.style.display = ''; });
+      applyFilters();
+    } else {
+      document.querySelectorAll('.filter-btn:not(.owner-btn)').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      document.getElementById('timeline-view').style.display = 'none';
+      document.getElementById('board-view').style.display = 'block';
+      document.querySelectorAll('.phase-section, .projects-grid, .cornell-section').forEach(function(el){ el.style.display = 'none'; });
+      buildBoardView();
+    }
+  }
+
+  function buildBoardView(){
+    var container = document.getElementById('board-container');
+    if(!container) return;
+    container.innerHTML = ''; // always rebuild
+    container.style.cssText = 'max-width:900px;';
+
+    var phaseLabels = {launch:'🚀 Launch', capability:'⚙️ Capability', idea:'💡 Idea'};
+    var phaseColors = {launch:'var(--green)', capability:'#3B82F6', idea:'#F59E0B'};
+    var phases = ['launch','capability','idea'];
+
+    phases.forEach(function(ph){
+      var cards = document.querySelectorAll('.pcard[data-phase="'+ph+'"]');
+      if(!cards.length) return;
+
+      // Phase header
+      var phHdr = document.createElement('div');
+      phHdr.style.cssText = 'display:flex;align-items:center;gap:8px;margin:20px 0 8px;padding-bottom:8px;border-bottom:1.5px solid '+phaseColors[ph]+';';
+      phHdr.innerHTML = '<span style="font-size:12px;font-weight:700;color:'+phaseColors[ph]+';">'+phaseLabels[ph]+'</span><span style="font-size:10px;font-family:var(--mono);color:var(--text3);">'+cards.length+' proyectos</span>';
+      container.appendChild(phHdr);
+
+      cards.forEach(function(card){
+        var name = card.querySelector('.pcard-name') ? card.querySelector('.pcard-name').textContent : '';
+        var fantasy = card.querySelector('.pcard-fantasy') ? card.querySelector('.pcard-fantasy').textContent : '';
+        var pill = card.querySelector('.status-pill');
+        var pillTxt = pill ? pill.textContent : '';
+        var pillClass = pill ? pill.className : '';
+        var launch = card.querySelector('.pcard-launch') ? card.querySelector('.pcard-launch').textContent : '';
+        
+        // Get next steps - first 2
+        var nextItems = card.querySelectorAll('.next-item');
+        var nextHtml = '';
+        for(var i=0; i<Math.min(2, nextItems.length); i++){
+          var txt = nextItems[i].querySelector('span:nth-child(2)') ? nextItems[i].querySelector('span:nth-child(2)').textContent : '';
+          var owner = nextItems[i].querySelector('.next-owner') ? nextItems[i].querySelector('.next-owner').textContent : '';
+          if(txt) nextHtml += '<div style="font-size:10px;color:var(--text2);padding:2px 0;">→ '+txt+(owner?' <span style="color:var(--text3);">— '+owner+'</span>':'')+'</div>';
+        }
+
+        var row = document.createElement('div');
+        row.style.cssText = 'display:grid;grid-template-columns:200px 120px 200px 1fr;gap:12px;align-items:start;padding:12px 14px;background:var(--surface);border:.5px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;transition:all .15s;';
+        row.onmouseover = function(){this.style.background='var(--surface2)';this.style.borderColor='var(--border2)';};
+        row.onmouseout = function(){this.style.background='var(--surface)';this.style.borderColor='var(--border)';};
+        row.onclick = function(){ scrollToProjectCard(card.id); };
+
+        row.innerHTML = 
+          '<div><div style="font-size:12px;font-weight:600;color:var(--text);">'+name+'</div><div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;">'+fantasy+'</div></div>'+
+          '<div><span class="'+pillClass+'" style="font-size:10px;">'+pillTxt+'</span></div>'+
+          '<div style="font-size:10px;color:var(--text3);">'+launch+'</div>'+
+          '<div>'+nextHtml+'</div>';
+
+        container.appendChild(row);
+      });
+    });
+  }
+
+  // ── GANTT INTERACTIVO TUBES ──
+  
+
+
+  function initGanttTubes(){
+    var body = document.getElementById('g-gantt');
+    body.innerHTML = '';
+
+    var MN=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov'];
+    function fmt(d){return d.getDate()+' '+MN[d.getMonth()];}
+    function addD(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r;}
+    function ci(d,o,s){return Math.max(0,Math.round((d-o)/864e5/s));}
+    var NOW=new Date(2026,3,30), TARGET=new Date(2026,9,1), ORIGIN=new Date(2026,0,1), STEP=15;
+
+    var tasks = PROJECTS.tubes.tasks;
+
+    var durs={};
+    tasks.forEach(function(t){durs[t.id]=t.d;});
+    var COLORS={dn:'#639922',free:'#7F77DD',blk:'#E24B4A',sl:'#1D9E75'};
+
+    function calcDates(){
+      var s={},e={};
+      tasks.forEach(function(t){
+        var start=t.fs?new Date(t.fs):(t.dep?new Date(e[t.dep]):new Date(NOW));
+        s[t.id]=start; e[t.id]=addD(start,durs[t.id]);
+      });
+      return {s:s,e:e};
+    }
+
+    var infoEl=document.createElement('div');
+    infoEl.style.cssText='display:grid;grid-template-columns:1fr auto;gap:12px;margin-bottom:12px;align-items:start;';
+    var launchInfo=document.createElement('div');
+    launchInfo.style.cssText='font-size:14px;font-family:var(--mono);padding:12px 16px;border-radius:8px;font-weight:600;';
+    var delayBox=document.createElement('div');
+    delayBox.style.cssText='padding:12px 16px;border-radius:8px;text-align:center;min-width:130px;';
+    infoEl.appendChild(launchInfo); infoEl.appendChild(delayBox);
+    body.appendChild(infoEl);
+
+    var sliderWrap=document.createElement('div');
+    sliderWrap.style.cssText='margin-bottom:14px;padding-bottom:14px;border-bottom:.5px solid var(--border);';
+    var sliderLabel=document.createElement('div');
+    sliderLabel.style.cssText='font-size:9px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;';
+    sliderLabel.textContent='Ajustar duraciones';
+    var sliderGrid=document.createElement('div');
+    sliderGrid.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;';
+    sliderWrap.appendChild(sliderLabel); sliderWrap.appendChild(sliderGrid);
+    body.appendChild(sliderWrap);
+
+    var ganttEl=document.createElement('div');
+    ganttEl.style.cssText='overflow-x:auto;';
+    body.appendChild(ganttEl);
+
+    var legend=document.createElement('div');
+    legend.style.cssText='display:flex;gap:10px;flex-wrap:wrap;padding:10px 0 4px;';
+    legend.innerHTML='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);font-family:var(--mono);"><span style="width:10px;height:10px;border-radius:2px;background:#639922;opacity:.8;display:inline-block;"></span>Completado</div><div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);font-family:var(--mono);"><span style="width:10px;height:10px;border-radius:2px;background:#7F77DD;display:inline-block;"></span>FREE</div><div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);font-family:var(--mono);"><span style="width:10px;height:10px;border-radius:2px;background:#E24B4A;display:inline-block;"></span>BLOCKER</div><div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);font-family:var(--mono);"><span style="width:10px;height:10px;border-radius:2px;background:#1D9E75;display:inline-block;"></span>Shelf Life</div>';
+    body.appendChild(legend);
+
+    function render(){
+      var dates=calcDates();
+      var launchDate=dates.e['pilot'];
+      var diff=Math.round((launchDate-TARGET)/864e5);
+      if(diff<=0){
+        launchInfo.style.cssText='font-size:14px;font-family:var(--mono);padding:12px 16px;border-radius:8px;font-weight:600;background:#D8F3E3;color:#2D6A4F;';
+        launchInfo.textContent='✅ Launch: '+fmt(launchDate);
+        delayBox.style.cssText='padding:12px 16px;border-radius:8px;text-align:center;min-width:130px;background:#D8F3E3;color:#2D6A4F;';
+        delayBox.innerHTML='<div style="font-size:10px;font-family:var(--mono);opacity:.7;margin-bottom:4px;">ATRASO</div><div style="font-size:26px;font-weight:600;">0d</div><div style="font-size:10px;font-family:var(--mono);margin-top:2px;">dentro del target</div>';
+      } else {
+        launchInfo.style.cssText='font-size:14px;font-family:var(--mono);padding:12px 16px;border-radius:8px;font-weight:600;background:#FDDCDC;color:#8B1A1A;';
+        launchInfo.textContent='⚠️ Launch: '+fmt(launchDate);
+        delayBox.style.cssText='padding:12px 16px;border-radius:8px;text-align:center;min-width:130px;background:#FDDCDC;color:#8B1A1A;';
+        delayBox.innerHTML='<div style="font-size:10px;font-family:var(--mono);opacity:.7;margin-bottom:4px;">ATRASO</div><div style="font-size:28px;font-weight:600;letter-spacing:-1px;">+'+diff+'d</div><div style="font-size:10px;font-family:var(--mono);margin-top:2px;">vs 01 Oct 2026</div>';
+      }
+
+      var cols=[];
+      for(var d=new Date(ORIGIN);d<=addD(launchDate,20);d=addD(d,STEP)) cols.push(new Date(d));
+      var nowCI=ci(NOW,ORIGIN,STEP), launchCI=ci(launchDate,ORIGIN,STEP);
+      var W175='width:175px;min-width:175px;', W60='width:60px;min-width:60px;', W32='width:32px;min-width:32px;';
+      var thB='border:.5px solid #E2DED5;background:#F0EEE8;';
+      var html='<table style="border-collapse:collapse;white-space:nowrap;">';
+      var mc={};
+      cols.forEach(function(c){var m=c.getMonth();mc[m]=(mc[m]||0)+1;});
+      html+='<tr><th style="'+W175+thB+'text-align:left;padding:5px 8px;font-size:9px;font-family:var(--mono);color:#9E9B95;text-transform:uppercase;letter-spacing:.05em;">Tarea</th>';
+      html+='<th style="'+W60+thB+'font-size:9px;font-family:var(--mono);color:#9E9B95;text-align:center;text-transform:uppercase;">Inicio</th>';
+      html+='<th style="'+W60+thB+'font-size:9px;font-family:var(--mono);color:#9E9B95;text-align:center;text-transform:uppercase;">Deadline</th>';
+      Object.entries(mc).forEach(function(e){html+='<th colspan="'+e[1]+'" style="'+thB+'text-align:center;padding:4px 2px;font-size:10px;font-family:var(--mono);color:#6B6760;font-weight:500;">'+MN[+e[0]]+'</th>';});
+      html+='</tr><tr><th style="'+W175+thB+'"></th><th style="'+W60+thB+'"></th><th style="'+W60+thB+'"></th>';
+      cols.forEach(function(c,i){var n=i===nowCI;html+='<th style="'+W32+thB+'font-size:8px;font-family:var(--mono);text-align:center;padding:3px 1px;'+(n?'background:#DBE9F9;color:#1A4F8A;font-weight:700;':'color:#9E9B95;')+'">'+(n?'HOY':c.getDate()+'/'+MN[c.getMonth()].slice(0,3))+'</th>';});
+      html+='</tr>';
+
+      var phases=[
+        {id:'idea',label:'Idea Phase',bg:'#FEF0D0',fg:'#7A4E0A',gf:null,ps:'idea'},
+        {id:'free',label:'Capability Phase — FREE',bg:'#F0EBF8',fg:'#5B21B6',gf:'free',ps:'cap'},
+        {id:'blk', label:'Capability Phase — BLOCKERS',bg:'#FEF0F0',fg:'#8B1A1A',gf:'blk',ps:'cap'},
+        {id:'lnch',label:'Launch Phase — FREE',bg:'#EAF3DE',fg:'#3B6D11',gf:'free',ps:'lnch'},
+      ];
+      var hereShown=false;
+
+      phases.forEach(function(ph){
+        var phTasks=tasks.filter(function(t){return t.ph===ph.ps&&(ph.gf?t.grp===ph.gf:true);});
+        if(!phTasks.length) return;
+        html+='<tr><td colspan="'+(cols.length+3)+'" style="background:'+ph.bg+';color:'+ph.fg+';font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:5px 8px;border:.5px solid #E2DED5;">'+ph.label+'</td></tr>';
+        phTasks.forEach(function(task){
+          var s=dates.s[task.id],e=dates.e[task.id];
+          var sc=ci(s,ORIGIN,STEP),ec=ci(e,ORIGIN,STEP);
+          var isDone=task.t==='dn';
+          var col=COLORS[task.t]||'#888';
+          html+='<tr><td style="'+W175+'padding:3px 8px;font-size:11px;color:'+(isDone?'#9E9B95':'#1A1916')+';border:.5px solid #E2DED5;vertical-align:middle;">'+(isDone?'✓ ':'')+task.l+'<span style="font-size:9px;font-family:var(--mono);color:#9E9B95;display:block;">'+task.o+'</span></td>';
+          html+='<td style="'+W60+'text-align:center;padding:3px 4px;font-size:10px;font-family:var(--mono);color:#6B6760;border:.5px solid #E2DED5;vertical-align:middle;line-height:1.4;"><span style="font-size:8px;color:#9E9B95;display:block;">inicio</span>'+fmt(s)+'</td>';
+          html+='<td style="'+W60+'text-align:center;padding:3px 4px;font-size:10px;font-family:var(--mono);color:'+(isDone?'#9E9B95':'#E24B4A')+';font-weight:'+(isDone?400:500)+';border:.5px solid #E2DED5;vertical-align:middle;line-height:1.4;"><span style="font-size:8px;display:block;opacity:.7;">deadline</span>'+fmt(e)+'</td>';
+          cols.forEach(function(c,i){
+            var n=i===nowCI, inBar=i>=sc&&i<=ec;
+            var bg=n?'rgba(55,138,221,0.06)':'transparent';
+            var barHtml='';
+            if(inBar){
+              var span=ec-sc, br='';
+              if(span===0) br='border-radius:3px;margin:0 2px;';
+              else if(i===sc) br='border-radius:3px 0 0 3px;margin-left:2px;';
+              else if(i===ec) br='border-radius:0 3px 3px 0;margin-right:2px;';
+              var op=isDone?'opacity:.8;':'';
+              var ht='';
+              if(n&&!isDone&&!hereShown){ht='<div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:#378ADD;color:#fff;font-size:8px;font-family:var(--mono);font-weight:700;padding:2px 5px;border-radius:3px;white-space:nowrap;z-index:10;">WE ARE HERE</div>';hereShown=true;}
+              barHtml='<div style="position:relative;overflow:visible;">'+ht+'<div style="height:13px;background:'+col+';display:block;'+br+op+'"></div></div>';
+            }
+            html+='<td style="'+W32+'height:28px;border:.5px solid #E2DED5;padding:0;vertical-align:middle;background:'+bg+';">'+barHtml+'</td>';
+          });
+          html+='</tr>';
+        });
+      });
+      html+='<tr><td style="'+W175+'background:#1A1916;color:#fff;font-size:9px;font-family:var(--mono);font-weight:600;padding:5px 8px;border:.5px solid #1A1916;">LAUNCH — '+fmt(launchDate)+'</td><td style="'+W60+'background:#1A1916;border:.5px solid #1A1916;"></td><td style="'+W60+'background:#1A1916;border:.5px solid #1A1916;"></td>';
+      cols.forEach(function(c,i){html+='<td style="'+W32+'background:#1A1916;border:.5px solid rgba(255,255,255,.1);text-align:center;vertical-align:middle;">'+(i===launchCI?'<span style="color:#EF9F27;font-size:14px;">★</span>':'')+'</td>';});
+      html+='</tr></table>';
+      ganttEl.innerHTML=html;
+    }
+
+    // Build sliders
+    tasks.filter(function(t){return t.adj;}).forEach(function(task){
+      var isFree=task.grp==='free';
+      var g=document.createElement('div');
+      g.style.cssText='background:#F0EEE8;border:.5px solid #E2DED5;border-radius:8px;padding:8px 10px;';
+      var dot=document.createElement('div');
+      dot.style.cssText='display:flex;align-items:center;gap:5px;margin-bottom:3px;';
+      dot.innerHTML='<span style="width:8px;height:8px;border-radius:2px;background:'+(isFree?'#7F77DD':'#E24B4A')+';display:inline-block;flex-shrink:0;"></span><span style="font-size:9px;font-family:var(--mono);color:#9E9B95;">'+(isFree?'FREE':'BLOCKER')+'</span>';
+      var name=document.createElement('div');
+      name.style.cssText='font-size:11px;color:#1A1916;font-weight:500;margin-bottom:4px;';
+      name.textContent=task.lbl||task.l;
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:6px;';
+      var sl=document.createElement('input');
+      sl.type='range';sl.min=task.min||1;sl.max=task.max||90;sl.value=durs[task.id];sl.style.flex='1';
+      var val=document.createElement('span');
+      val.style.cssText='font-size:11px;font-family:var(--mono);color:'+(isFree?'#7F77DD':'#E24B4A')+';min-width:32px;text-align:right;';
+      val.textContent=durs[task.id]+'d';
+      sl.oninput=function(){durs[task.id]=parseInt(sl.value);val.textContent=sl.value+'d';render();};
+      row.appendChild(sl);row.appendChild(val);
+      g.appendChild(dot);g.appendChild(name);g.appendChild(row);
+      sliderGrid.appendChild(g);
+    });
+
+    render();
+  }
+
+
+  // ── GANTT VIEW ──
+  var ganttBuilt = false;
+
+  function showGanttView(project, btn) {
+    // Deactivate other phase/view buttons
+    document.querySelectorAll('.filter-btn:not(.owner-btn):not(.gantt-nav-btn)').forEach(function(b){ b.classList.remove('active'); });
+    // Toggle gantt nav buttons
+    document.querySelectorAll('.gantt-nav-btn').forEach(function(b){ b.classList.remove('active'); });
+
+    var gv = document.getElementById('gantt-view');
+    var isAlreadyActive = gv.style.display === 'block' && btn.classList.contains('was-active');
+
+    btn.classList.add('active');
+    btn.classList.add('was-active');
+
+    // Show gantt view, hide everything else
+    document.getElementById('timeline-view').style.display = 'none';
+    document.getElementById('board-view').style.display = 'none';
+    gv.style.display = 'block';
+    document.querySelectorAll('.phase-section, .projects-grid, .cornell-section').forEach(function(el){ el.style.display = 'none'; });
+
+    // Clear sliders and gantt table only
+    document.getElementById('g-sliders').innerHTML = '';
+    document.getElementById('g-gantt').innerHTML = '';
+
+    if (project === 'tubes') {
+      document.getElementById('gantt-project-title').textContent = 'Gantt — Pastes & Tubes (Colgate 🧴) · Target: 01 Oct 2026';
+      var ob=document.getElementById('gantt-open-btn');if(ob){ob.style.display='inline-block';ob.onclick=function(){window.open('gantt_tubes_v2.html','_blank');};}
+      window.open('gantt_tubes_v2.html','_blank');
+    } else if (project === 'dados') {
+      document.getElementById('gantt-project-title').textContent = 'Gantt — Fresh Diced Garlic (Dados 🧄) · Target: 01 Sep 2026';
+      var lt = document.getElementById('g-launch-target'); if(lt) lt.textContent = '01 Sep 2026';
+      var ob=document.getElementById('gantt-open-btn');if(ob)ob.style.display='inline-block';
+      openGanttDados();
+    } else if (project === 'dips') {
+      document.getElementById('gantt-project-title').textContent = 'Gantt — Fresh Dips & Spreads (Toum 🫙) · Target: 01 Dic 2026';
+      var lt = document.getElementById('g-launch-target'); if(lt) lt.textContent = '01 Dic 2026';
+      buildGanttDips();
+    }
+  }
+
+  function buildGanttTubes() {
+    var MN=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov'];
+    var fmt=function(d){return d.getDate()+' '+MN[d.getMonth()];};
+    var addD=function(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r;};
+    var cIdx=function(d,o,s){return Math.max(0,Math.round((d-o)/864e5/s));};
+    var NOW=new Date(2026,3,30),TARGET=new Date(2026,9,1),ORIGIN=new Date(2026,0,1),STEP=15;
+
+    var tasks = PROJECTS.tubes.tasks;
+
+    var durs={};
+    tasks.forEach(function(t){durs[t.id]=t.d;});
+
+    var calcDates=function(){
+      var s={},e={};
+      tasks.forEach(function(t){
+        var start=t.fs?new Date(t.fs):(t.dep?new Date(e[t.dep]):new Date(NOW));
+        s[t.id]=start; e[t.id]=addD(start,durs[t.id]);
+      });
+      return {s:s,e:e};
+    };
+
+    // Build sliders
+    var sg=document.getElementById('g-sliders');
+    tasks.filter(function(t){return t.adj;}).forEach(function(task){
+      var isFree=task.grp==='free';
+      var g=document.createElement('div');
+      g.style.cssText='background:var(--surface2);border:.5px solid var(--border);border-radius:8px;padding:8px 10px;';
+      var dot=document.createElement('div');
+      dot.style.cssText='display:flex;align-items:center;gap:5px;margin-bottom:3px;';
+      dot.innerHTML='<span style="width:8px;height:8px;border-radius:2px;background:'+(isFree?'#7F77DD':'#E24B4A')+';display:inline-block;flex-shrink:0;"></span><span style="font-size:9px;font-family:var(--mono);color:var(--text3);">'+(isFree?'FREE':'BLOCKER')+'</span>';
+      var name=document.createElement('div');
+      name.style.cssText='font-size:11px;color:var(--text);font-weight:500;margin-bottom:4px;';
+      name.textContent=task.lbl||task.l;
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:6px;';
+      var sl=document.createElement('input');
+      sl.type='range'; sl.min=task.min||1; sl.max=task.max||90; sl.value=durs[task.id]; sl.style.flex='1';
+      var val=document.createElement('span');
+      val.style.cssText='font-size:11px;font-family:var(--mono);color:'+(isFree?'#7F77DD':'#E24B4A')+';min-width:32px;text-align:right;';
+      val.textContent=durs[task.id]+'d';
+      sl.oninput=function(){durs[task.id]=parseInt(sl.value);val.textContent=sl.value+'d';renderGantt();};
+      row.appendChild(sl); row.appendChild(val);
+      g.appendChild(dot); g.appendChild(name); g.appendChild(row);
+      sg.appendChild(g);
+    });
+
+    function renderGantt(){
+      var dates=calcDates();
+      var ld=dates.e['pilot'];
+      var diff=Math.round((ld-TARGET)/864e5);
+      var li=document.getElementById('g-launch-info');
+      var db=document.getElementById('g-delay-box');
+      var delayNum = document.getElementById('g-delay-num');
+      // End Day box
+      li.style.cssText = '';
+      var ldEl = document.getElementById('g-launch-date-display'); if(ldEl) ldEl.textContent = fmt(ld); li.innerHTML = ''
+        + '<div style="font-size:24px;font-weight:700;color:var(--text);font-family:var(--mono);letter-spacing:-0.5px;">'+fmt(ld)+'</div>'
+        + '<div style="font-size:11px;color:var(--text2);margin-top:4px;">End of Tasks · '+(diff<=0?'<span style=\"color:#2D6A4F;font-weight:500;\">✅ Dentro del target</span>':'<span style=\"color:#E24B4A;font-weight:500;\">⚠️ Se pasa del target</span>')+'</div>';
+      // Delay box
+      if(diff<=0){
+        db.style.background='#2D6A4F';
+        if(delayNum) delayNum.textContent='0d';
+      } else {
+        db.style.background='#E24B4A';
+        if(delayNum) delayNum.textContent='+'+diff+'d';
+      }
+
+      var cols=[];
+      for(var d=new Date(ORIGIN);d<=addD(ld,20);d=addD(d,STEP)) cols.push(new Date(d));
+      var nowCI=cIdx(NOW,ORIGIN,STEP), launchCI=cIdx(ld,ORIGIN,STEP);
+      var W185='width:185px;min-width:185px;', W62='width:62px;min-width:62px;', W34='width:34px;min-width:34px;';
+      var bd='.5px solid #E2DED5', bg2='#F0EEE8';
+
+      var html='<table style="border-collapse:collapse;white-space:nowrap;">';
+      var mc={};
+      cols.forEach(function(c){var m=c.getMonth();mc[m]=(mc[m]||0)+1;});
+      html+='<tr><th style="'+W185+'text-align:left;padding:5px 8px;font-size:9px;font-family:var(--mono);color:#9E9B95;text-transform:uppercase;letter-spacing:.05em;background:'+bg2+';border:'+bd+';">Tarea</th>';
+      html+='<th style="'+W62+'text-align:center;padding:5px 4px;font-size:9px;font-family:var(--mono);color:#9E9B95;text-transform:uppercase;background:'+bg2+';border:'+bd+';">Inicio</th>';
+      html+='<th style="'+W62+'text-align:center;padding:5px 4px;font-size:9px;font-family:var(--mono);color:#9E9B95;text-transform:uppercase;background:'+bg2+';border:'+bd+';">Deadline</th>';
+      Object.entries(mc).forEach(function(e){html+='<th colspan="'+e[1]+'" style="text-align:center;padding:4px 2px;font-size:10px;font-family:var(--mono);color:#6B6760;font-weight:500;background:'+bg2+';border:'+bd+';">'+MN[+e[0]]+'</th>';});
+      html+='</tr><tr><th style="'+W185+'background:'+bg2+';border:'+bd+';"></th><th style="'+W62+'background:'+bg2+';border:'+bd+';"></th><th style="'+W62+'background:'+bg2+';border:'+bd+';"></th>';
+      cols.forEach(function(c,i){var n=i===nowCI;html+='<th style="'+W34+'font-size:8px;font-family:var(--mono);text-align:center;padding:3px 1px;background:'+(n?'#DBE9F9':bg2)+';color:'+(n?'#1A4F8A':'#9E9B95')+';font-weight:'+(n?700:400)+';border:'+bd+';">'+(n?'HOY':c.getDate()+'/'+MN[c.getMonth()].slice(0,3))+'</th>';});
+      html+='</tr>';
+
+      var phases=[
+        {id:'idea',label:'Idea Phase',bg:'#FEF0D0',fg:'#7A4E0A',gf:null,ps:'idea'},
+        {id:'free',label:'Capability — FREE',bg:'#F0EBF8',fg:'#5B21B6',gf:'free',ps:'cap'},
+        {id:'blk',label:'Capability — BLOCKERS',bg:'#FEF0F0',fg:'#8B1A1A',gf:'blk',ps:'cap'},
+        {id:'lnch',label:'Launch Phase — FREE',bg:'#EAF3DE',fg:'#3B6D11',gf:'free',ps:'lnch'},
+      ];
+      var hereShown=false;
+
+      phases.forEach(function(ph){
+        var pts=tasks.filter(function(t){return t.ph===ph.ps&&(ph.gf?t.grp===ph.gf:true);});
+        if(!pts.length) return;
+        html+='<tr><td colspan="'+(cols.length+3)+'" style="background:'+ph.bg+';color:'+ph.fg+';font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:5px 8px;border:'+bd+';">'+ph.label+'</td></tr>';
+        pts.forEach(function(task){
+          var s=dates.s[task.id],e=dates.e[task.id];
+          var sc=cIdx(s,ORIGIN,STEP),ec=cIdx(e,ORIGIN,STEP);
+          var isDone=task.t==='dn';
+          var col=task.t==='dn'?'#639922':task.t==='free'?'#7F77DD':task.t==='sl'?'#1D9E75':'#E24B4A';
+          html+='<tr><td style="'+W185+'padding:3px 8px;font-size:11px;color:'+(isDone?'#9E9B95':'#1A1916')+';border:'+bd+';vertical-align:middle;">'+(isDone?'✓ ':'')+task.l+'<span style="font-size:9px;font-family:var(--mono);color:#9E9B95;display:block;">'+task.o+'</span></td>';
+          html+='<td style="'+W62+'text-align:center;padding:3px 4px;font-size:10px;font-family:var(--mono);color:#6B6760;border:'+bd+';vertical-align:middle;line-height:1.4;"><span style="font-size:8px;color:#9E9B95;display:block;">inicio</span>'+fmt(s)+'</td>';
+          html+='<td style="'+W62+'text-align:center;padding:3px 4px;font-size:10px;font-family:var(--mono);color:'+(isDone?'#9E9B95':'#E24B4A')+';font-weight:'+(isDone?400:500)+';border:'+bd+';vertical-align:middle;line-height:1.4;"><span style="font-size:8px;display:block;opacity:.7;">deadline</span>'+fmt(e)+'</td>';
+          cols.forEach(function(c,i){
+            var n=i===nowCI,inBar=i>=sc&&i<=ec;
+            html+='<td style="'+W34+'height:28px;border:'+bd+';padding:0;vertical-align:middle;background:'+(n?'rgba(55,138,221,0.06)':'transparent')+';">';
+            if(inBar){
+              var span=ec-sc,br='';
+              if(span===0) br='border-radius:3px;margin:0 2px;';
+              else if(i===sc) br='border-radius:3px 0 0 3px;margin-left:2px;';
+              else if(i===ec) br='border-radius:0 3px 3px 0;margin-right:2px;';
+              var op=isDone?'opacity:.8;':'';
+              var ht='';
+              if(n&&!isDone&&!hereShown){ht='<div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:#378ADD;color:#fff;font-size:8px;font-family:var(--mono);font-weight:700;padding:2px 5px;border-radius:3px;white-space:nowrap;z-index:10;">WE ARE HERE</div>';hereShown=true;}
+              html+='<div style="position:relative;overflow:visible;">'+ht+'<div style="height:13px;background:'+col+';display:block;'+br+op+'"></div></div>';
+            }
+            html+='</td>';
+          });
+          html+='</tr>';
+        });
+      });
+      html+='<tr><td style="'+W185+'background:#1A1916;color:#fff;font-size:9px;font-family:var(--mono);font-weight:600;padding:5px 8px;border:.5px solid #1A1916;">END OF TASKS — '+fmt(ld)+'</td><td style="'+W62+'background:#1A1916;border:.5px solid #1A1916;"></td><td style="'+W62+'background:#1A1916;border:.5px solid #1A1916;"></td>';
+      cols.forEach(function(c,i){html+='<td style="'+W34+'background:#1A1916;border:.5px solid rgba(255,255,255,.1);text-align:center;vertical-align:middle;">'+(i===launchCI?'<span style="color:#EF9F27;font-size:14px;">★</span>':'')+'</td>';});
+      html+='</tr></table>';
+      document.getElementById('g-gantt').innerHTML=html;
+    }
+
+    // Set launch info immediately before rendering
+    var initDates = calcDates();
+    var initLd = initDates.e['pilot'];
+    var initDiff = Math.round((initLd - TARGET) / 864e5);
+    var liEl = document.getElementById('g-launch-info');
+    var delayNumEl = document.getElementById('g-delay-num');
+    var dbEl = document.getElementById('g-delay-box');
+    var ldInitEl = document.getElementById('g-launch-date-display'); if(ldInitEl) ldInitEl.textContent = fmt(initLd); liEl.innerHTML = ''
+      + '<div style="font-size:24px;font-weight:700;color:var(--text);font-family:var(--mono);letter-spacing:-0.5px;">' + fmt(initLd) + '</div>'
+      + '<div style="font-size:11px;color:var(--text2);margin-top:4px;">End of Tasks · ' + (initDiff<=0?'<span style=\'color:#2D6A4F;font-weight:500;\'>✅ Dentro del target</span>':'<span style=\'color:#E24B4A;font-weight:500;\'>⚠️ Se pasa del target</span>') + '</div>';
+    if (initDiff <= 0) {
+      if(dbEl) dbEl.style.background = '#2D6A4F';
+      if(delayNumEl) delayNumEl.textContent = '0d';
+    } else {
+      if(dbEl) dbEl.style.background = '#E24B4A';
+      if(delayNumEl) delayNumEl.textContent = '+' + initDiff + 'd';
+    }
+
+    renderGantt();
+  }
+
+
+  function buildGanttDados(){
+    var lt=document.getElementById('g-launch-target');if(lt)lt.textContent='01 Sep 2026';
+    var TARGET_D=new Date(2026,8,1);
+    dadosCalcAll();
+    var last=dadosLastBlkEnd();
+    if(last){
+      var ldEl=document.getElementById('g-launch-date-display');if(ldEl)ldEl.textContent=dadosFmt(last);
+      var diff=dadosDif(TARGET_D,last);
+      var li=document.getElementById('g-launch-info');var db=document.getElementById('g-delay-box');var dn=document.getElementById('g-delay-num');
+      if(diff<=0){if(li)li.style.cssText='flex:1;min-width:180px;background:#FEF0D0;border:.5px solid #F5D87A;border-radius:10px;padding:16px 20px;';if(dn)dn.textContent='0d';if(db)db.style.background='#2D6A4F';}
+      else{if(li)li.style.cssText='flex:1;min-width:180px;background:#FDDCDC;border:.5px solid #F7C1C1;border-radius:10px;padding:16px 20px;';if(dn)dn.textContent='+'+diff+'d';if(db)db.style.background='#E24B4A';}
+    }
+    var sg=document.getElementById('g-sliders');sg.innerHTML='';
+
+    var ORG=new Date(2026,0,1);
+    var END_D=last?dadosAddD(last,20):dadosAddD(TARGET_D,20);
+    if(TARGET_D>END_D)END_D=dadosAddD(TARGET_D,10);
+    var DAYS=dadosDif(ORG,END_D);
+    var PPD=Math.max(2.5,700/DAYS);
+    var TOD_X=dadosDif(ORG,new Date(2026,4,17))*PPD;
+    var TGT_X=dadosDif(ORG,TARGET_D)*PPD;
+    var COLORS={blk:'#E24B4A',free:'#7F77DD',done:'#2D6A4F'};
+    var ICONS={blk:'🔴',free:'🟣',done:'✅'};
+    var RH=36; // FIXED row height — never changes
+    var PH=30; // phase row height
+
+    function mk(tag,css,txt){var el=document.createElement(tag);if(css)el.style.cssText=css;if(txt!==undefined)el.textContent=txt;return el;}
+    function mkC(tag,cls,txt){var el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el;}
+
+    // IMPORTANT: inicio cell is compact - no expanding content
+    function buildIniCompact(t,isSub,parent){
+      var wrap=mk('div','position:relative;');
+      var btn=mk('div','font-size:10px;font-family:var(--mono);cursor:pointer;padding:2px 4px;border-radius:4px;border:.5px solid #E2DED5;background:#F0EEE8;color:#4A4845;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;');
+      var c=dadosC[t.id];
+      if(t.mode==='fixed') btn.textContent='📅 '+(t.fd||'—');
+      else if(t.mode==='prev'){var pt=isSub?dadosPrevSub(t.id,parent):dadosPrevTask(t.id);btn.textContent='↳ '+(pt?pt.name.substring(0,12):'—');}
+      else btn.textContent='🔍 '+(t.depName?t.depName.substring(0,10):'buscar');
+
+      // Popup editor
+      var popup=mk('div','display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid #E2DED5;border-radius:8px;padding:10px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:200px;');
+      var chips=mkC('div','g-ini-chips');
+      [{m:'fixed',l:'Fecha fija'},{m:'prev',l:'Anterior'},{m:'search',l:'Buscar'}].forEach(function(opt){
+        var chip=mkC('span','g-chip'+(t.mode===opt.m?' on':''),opt.l);
+        chip.addEventListener('click',(function(tsk,mode){return function(){tsk.mode=mode;if(mode!=='search'){tsk.dep=null;tsk.depName='';}if(mode!=='fixed')tsk.fd=null;openGanttDados();};})(t,opt.m));
+        chips.appendChild(chip);
+      });
+      popup.appendChild(chips);
+      var inp=null;
+      if(t.mode==='fixed'){
+        inp=document.createElement('input');inp.type='date';inp.value=t.fd||'';inp.style.cssText='margin-top:6px;border:.5px solid #E2DED5;border-radius:5px;padding:4px 6px;font-size:11px;font-family:var(--mono);width:100%;';
+        inp.addEventListener('change',(function(tsk){return function(){tsk.fd=this.value;openGanttDados();};})(t));
+        popup.appendChild(inp);
+      } else if(t.mode==='search'){
+        inp=document.createElement('input');inp.type='text';inp.placeholder='Buscar tarea...';inp.value=t.depName||'';
+        inp.style.cssText='margin-top:6px;border:.5px solid #E2DED5;border-radius:5px;padding:4px 6px;font-size:11px;font-family:var(--mono);width:100%;';
+        var sugg=mk('div','margin-top:4px;max-height:100px;overflow-y:auto;');
+        inp.addEventListener('input',(function(tsk,s){return function(){
+          var q=this.value.toLowerCase();s.innerHTML='';
+          if(q){dadosAllT().filter(function(x){return x.id!==tsk.id&&x.name.toLowerCase().indexOf(q)>=0;}).forEach(function(x){
+            var it=mk('div','padding:4px 6px;font-size:11px;font-family:var(--mono);cursor:pointer;border-radius:4px;',x.name);
+            it.addEventListener('mouseover',function(){this.style.background='#F0EEE8';});
+            it.addEventListener('mouseout',function(){this.style.background='';});
+            it.addEventListener('click',(function(xt,inp2){return function(){tsk.dep=xt.id;tsk.depName=xt.name;inp2.value=xt.name;openGanttDados();};})(x,inp));
+            s.appendChild(it);
+          });}
+        };})(t,sugg));
+        popup.appendChild(inp);popup.appendChild(sugg);
+      }
+      btn.addEventListener('click',function(e){e.stopPropagation();popup.style.display=popup.style.display==='none'?'block':'none';});
+      document.addEventListener('click',function(){popup.style.display='none';});
+      wrap.appendChild(btn);wrap.appendChild(popup);
+      return wrap;
+    }
+
+    // Build table
+    var wrapper=mk('div','max-height:62vh;overflow:auto;border:1px solid #E2DED5;border-radius:8px;');
+    var table=document.createElement('table');
+    table.style.cssText='border-collapse:collapse;font-family:var(--sans);font-size:11px;table-layout:fixed;';
+
+    // THEAD
+    var thead=document.createElement('thead');
+    var htr=document.createElement('tr');
+    // Left header
+    var lhth=document.createElement('th');
+    lhth.colSpan=8;
+    lhth.style.cssText='background:#F0EEE8;border-bottom:1px solid #E2DED5;padding:5px 10px;font-size:10px;font-family:var(--mono);color:var(--text3);font-weight:500;text-align:left;height:'+PH+'px;white-space:nowrap;';
+    lhth.textContent='Fresh Diced Garlic';htr.appendChild(lhth);
+    // Bar header
+    var rhth=document.createElement('th');
+    rhth.style.cssText='background:#F0EEE8;border-bottom:1px solid #E2DED5;padding:0;position:relative;width:'+Math.ceil(DAYS*PPD)+'px;height:'+PH+'px;';
+    var cur2=new Date(ORG);
+    while(cur2<=END_D){
+      var dm=new Date(cur2.getFullYear(),cur2.getMonth()+1,0).getDate();
+      var ml=mk('div','position:absolute;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--mono);color:#9E9B95;border-right:.5px solid #E2DED5;box-sizing:border-box;',dadosMN[cur2.getMonth()]);
+      ml.style.left=dadosDif(ORG,cur2)*PPD+'px';ml.style.width=dm*PPD+'px';
+      rhth.appendChild(ml);cur2=new Date(cur2.getFullYear(),cur2.getMonth()+1,1);
+    }
+    var todH=mk('div','position:absolute;top:0;bottom:0;width:2px;background:#185FA5;opacity:.5;left:'+TOD_X+'px;');
+    todH.appendChild(mk('span','position:absolute;bottom:1px;left:3px;font-size:8px;font-family:var(--mono);color:#185FA5;font-weight:700;white-space:nowrap;','HOY'));
+    rhth.appendChild(todH);
+    rhth.appendChild(mk('div','position:absolute;top:0;bottom:0;width:2px;background:#2D6A4F;opacity:.4;left:'+TGT_X+'px;'));
+    htr.appendChild(rhth);thead.appendChild(htr);table.appendChild(thead);
+
+    var tbody=document.createElement('tbody');
+
+    // FIXED height row builder
+    function makeRow(cells, barFn, h, bg){
+      var tr=document.createElement('tr');
+      var rowBg=bg||'#fff';
+      // Left cells
+      cells.forEach(function(cellFn){
+        var td=document.createElement('td');
+        td.style.cssText='border-bottom:.5px solid #E2DED5;height:'+h+'px;background:'+rowBg+';vertical-align:middle;overflow:hidden;padding:0 3px;';
+        if(cellFn)cellFn(td);
+        tr.appendChild(td);
+      });
+      // Bar cell — same fixed height
+      var btd=document.createElement('td');
+      btd.style.cssText='border-bottom:.5px solid #E2DED5;height:'+h+'px;background:'+rowBg+';position:relative;overflow:hidden;';
+      if(barFn)barFn(btd);
+      // vlines
+      var vt=mk('div','position:absolute;top:0;bottom:0;width:1px;background:#185FA5;opacity:.12;pointer-events:none;left:'+TOD_X+'px;');btd.appendChild(vt);
+      var vg=mk('div','position:absolute;top:0;bottom:0;width:1px;background:#2D6A4F;opacity:.12;pointer-events:none;left:'+TGT_X+'px;');btd.appendChild(vg);
+      tr.appendChild(btd);
+      tbody.appendChild(tr);
+      return tr;
+    }
+
+    function makeBar(c,type,collapsed){
+      return function(btd){
+        if(!c||!c.s||!c.e)return;
+        var days=Math.max(1,dadosDif(c.s,c.e));
+        var bl=dadosDif(ORG,c.s)*PPD;
+        var bw=Math.max(4,days*PPD);
+        var bar=mk('div','position:absolute;border-radius:3px;top:50%;left:'+bl+'px;width:'+bw+'px;');
+        if(collapsed){bar.style.height='6px';bar.style.marginTop='-3px';bar.style.background='#9E9B95';bar.style.opacity='.4';}
+        else{bar.style.height='13px';bar.style.marginTop='-6px';bar.style.background=COLORS[type]||'#888';if(type==='done')bar.style.opacity='.65';}
+        bar.title=dadosFmt(c.s)+' → '+dadosFmt(c.e)+' ('+days+'d)';
+        btd.appendChild(bar);
+      };
+    }
+
+    function addTaskRow(t,isSub,parent,phId,bg){
+      var c=dadosC[t.id];
+      var hasS=!isSub&&t.subtasks&&t.subtasks.length>0;
+      var rowBg=bg||'#fff';
+
+      makeRow([
+        // drag
+        function(td){td.appendChild(mkC('div','g-dh','⠿'));td.style.width='16px';td.style.cursor='grab';},
+        // collapse
+        function(td){
+          td.style.width='14px';
+          var cb=mkC('div',hasS?'g-cb':'g-cb g-cb-empty',hasS?(t.collapsed?'▶':'▼'):'');
+          if(hasS)cb.addEventListener('click',(function(task){return function(){task.collapsed=!task.collapsed;openGanttDados();};})(t));
+          td.appendChild(cb);
+        },
+        // name
+        function(td){
+          td.style.width='150px';td.style.maxWidth='150px';
+          var na=document.createElement('input');na.className='g-fi';na.value=t.name;na.placeholder='Nombre';na.style.cssText='font-size:11px;width:100%;overflow:hidden;text-overflow:ellipsis;';
+          na.addEventListener('input',(function(task){return function(){task.name=this.value;};})(t));
+          na.addEventListener('blur',function(){openGanttDados();});
+          td.appendChild(na);
+        },
+        // owner
+        function(td){
+          td.style.width='70px';
+          var ow=document.createElement('input');ow.className='g-fi g-own';ow.value=t.owner;ow.placeholder='Owner';ow.style.cssText='font-size:10px;width:100%;';
+          ow.addEventListener('input',(function(task){return function(){task.owner=this.value;};})(t));
+          td.appendChild(ow);
+        },
+        // days
+        function(td){
+          td.style.width='36px';td.style.textAlign='center';
+          if(!hasS){
+            var du=document.createElement('input');du.type='number';du.value=t.dur;du.min=1;du.style.cssText='font-size:11px;font-family:var(--mono);width:100%;border:none;background:transparent;text-align:center;';
+            du.addEventListener('change',(function(task){return function(){task.dur=parseInt(this.value)||1;openGanttDados();};})(t));
+            td.appendChild(du);
+          }
+        },
+        // inicio — compact popup
+        function(td){td.style.width='130px';td.appendChild(buildIniCompact(t,isSub,parent));},
+        // deadline
+        function(td){
+          td.style.width='55px';
+          td.appendChild(mkC('div','g-dl',c?dadosFmt(c.e):'--'));
+        },
+        // badge + del
+        function(td){
+          td.style.width='44px';
+          var inner=mk('div','display:flex;align-items:center;gap:4px;');
+          var badge=mkC('div','g-badge '+t.type,ICONS[t.type]);badge.title='Cambiar tipo';
+          badge.addEventListener('click',(function(task){return function(){var nx={blk:'free',free:'done',done:'blk'};task.type=nx[task.type];openGanttDados();};})(t));
+          var del=mkC('div','g-del','✕');
+          del.addEventListener('click',(function(pid,tid,isSb,par){return function(){if(isSb){par.subtasks=par.subtasks.filter(function(s){return s.id!==tid;});}else{var ph=dadosPhases.find(function(p){return p.id===pid;});if(ph)ph.tasks=ph.tasks.filter(function(t){return t.id!==tid;});}openGanttDados();};})(phId,t.id,isSub,parent));
+          inner.appendChild(badge);inner.appendChild(del);td.appendChild(inner);
+        }
+      ], makeBar(c,t.type,hasS&&t.collapsed), RH, rowBg);
+    }
+
+    function addPhaseRow(ph){
+      makeRow([
+        function(td){
+          td.colSpan=8;td.style.width='auto';td.style.background='#F0EEE8';td.style.borderTop='1px solid #E2DED5';
+          var inner=mk('div','display:flex;align-items:center;gap:7px;padding:4px 8px;');
+          inner.innerHTML='<span>'+ph.emoji+'</span>';
+          var pni=document.createElement('input');pni.className='g-pname';pni.value=ph.name;pni.style.flex='1';pni.style.fontSize='12px';
+          pni.addEventListener('input',function(){ph.name=this.value;});inner.appendChild(pni);
+          var dph=mkC('span','g-del-ph','✕');
+          dph.addEventListener('click',(function(id){return function(){dadosPhases=dadosPhases.filter(function(p){return p.id!==id;});openGanttDados();};})(ph.id));
+          inner.appendChild(dph);td.appendChild(inner);
+        }
+      ], null, PH, '#F0EEE8');
+    }
+
+    function addBtnRow(label,indent,onclick,bg){
+      makeRow([
+        function(td){
+          td.colSpan=8;td.style.width='auto';
+          var btn=mk('div','padding:4px 8px 4px '+(indent?'28px':'8px')+';font-size:10px;font-family:var(--mono);color:#9E9B95;cursor:pointer;',label);
+          btn.addEventListener('mouseover',function(){this.style.color=indent?'#7F77DD':'#185FA5';});
+          btn.addEventListener('mouseout',function(){this.style.color='#9E9B95';});
+          btn.addEventListener('click',onclick);
+          td.appendChild(btn);
+        }
+      ], null, 26, bg||'rgba(0,0,0,.01)');
+    }
+
+    dadosPhases.forEach(function(ph){
+      addPhaseRow(ph);
+      ph.tasks.forEach(function(t){
+        addTaskRow(t,false,null,ph.id);
+        if(t.subtasks&&t.subtasks.length>0&&!t.collapsed){
+          t.subtasks.forEach(function(s){addTaskRow(s,true,t,ph.id,'rgba(0,0,0,.02)');});
+          addBtnRow('＋ Agregar subtarea',true,(function(task){return function(){task.subtasks.push({id:dadosNid('s'),name:'Nueva subtarea',owner:'',type:'free',mode:'prev',fd:null,dur:7,dep:null,depName:''});openGanttDados();};})(t));
+        }
+      });
+      addBtnRow('＋ Agregar tarea',false,(function(pid){return function(){var ph2=dadosPhases.find(function(p){return p.id===pid;});if(ph2)ph2.tasks.push({id:dadosNid('t'),name:'Nueva tarea',owner:'',type:'blk',mode:'prev',fd:null,dur:14,dep:null,depName:'',subtasks:[],collapsed:false});openGanttDados();};})(ph.id));
+    });
+    addBtnRow('＋ Agregar fase',false,function(){dadosPhases.push({id:dadosNid('ph'),name:'Nueva Fase',emoji:'📋',tasks:[]});openGanttDados();});
+
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+    sg.appendChild(wrapper);
+  }
+
+
+
+  function renderCardNextStepsDados() {
+    var el = document.getElementById('nextsteps-dados');
+    if (!el) return;
+    var MN=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov'];
+    function fmt(d){return d.getDate()+' '+MN[d.getMonth()];}
+    function addD(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r;}
+    var NOW=new Date(2026,3,30);
+    var tasks=PROJECTS.dados.tasks;
+    var s={},e={};
+    tasks.forEach(function(t){
+      var start=t.fs?new Date(t.fs):(t.dep?new Date(e[t.dep]):new Date(NOW));
+      s[t.id]=start; e[t.id]=addD(start,t.d);
+    });
+
+    // Map task ids to next steps labels
+    var steps = [
+      {l:'✅ Degustación muestras Cornell — resultado: necesita ajuste de proceso', o:'Felicitas', done:true},
+      {l:'Enviar feedback a Cornell y definir ajustes de formulación', o:'Felicitas', id:'d_feedback', badge:'HOY'},
+      {l:'Reunión Cornell + Guille — setear proceso blanqueo químico', o:'Felicitas / Guille', id:'d_reunion'},
+      {l:'🟦 Plastic: Diseño Flow Pack → Food Safety + SC Approval → Impresión + Flete (60d)', o:'Agencia / Luis / Fer', id:'d_impr_fp'},
+      {l:'🟩 Glass: Definir tamaño jar + color de tapa', o:'Luis / Ale', id:'d_jar_size'},
+      {l:'🟩 Glass: Diseño labels → Food Safety + SC Approval → Labels + Frascos', o:'Agencia / Luis / Fer', id:'d_labels'},
+      {l:'Cornell: ajuste proceso blanqueo (30d)', o:'Cornell', id:'d_cornell'},
+      {l:'Shelf Life 60d — corre en paralelo con proceso', o:'Fer / Cornell', id:'d_shelf'},
+      {l:'Escalar operaciones en planta (45d)', o:'Guille', id:'d_escalar'},
+      {l:'Pilot Test Plastic + Glass', o:'Felicitas / Guille / Alberto', id:'d_pilot_fp'},
+      {l:'Sales Pitch → Retailers presentation', o:'Ale / Agencia', id:'d_gk2'},
+    ];
+
+    var html = '';
+    steps.forEach(function(step, i) {
+      var deadline = step.id && e[step.id] ? '<span style="font-size:10px;font-family:var(--mono);color:#E24B4A;margin-left:auto;padding-left:8px;flex-shrink:0;">→ '+fmt(e[step.id])+'</span>' : '';
+      var badge = step.badge ? '<span style="font-size:10px;background:#FEF0D0;color:#7A4E0A;padding:1px 6px;border-radius:4px;margin-left:4px;">'+step.badge+'</span>' : '';
+      var owner = '<span style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-left:6px;">'+step.o+'</span>';
+      html += '<div class="next-item"><span class="next-n">'+(i+1)+'.</span><span>'+step.l+badge+owner+'</span>'+deadline+'</div>';
+    });
+    el.innerHTML = html;
+  }
+
+
+  function showCardsIndex(btn) {
+    var isActive = btn.classList.contains('active');
+    if (isActive) {
+      btn.classList.remove('active');
+      document.getElementById('cards-index-view').style.display = 'none';
+      applyFilters();
+      return;
+    }
+    document.querySelectorAll('.filter-btn:not(.owner-btn):not(.gantt-nav-btn)').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('timeline-view').style.display = 'none';
+    document.getElementById('board-view').style.display = 'none';
+    document.getElementById('gantt-view').style.display = 'none';
+    document.getElementById('cards-index-view').style.display = 'block';
+    document.querySelectorAll('.phase-section, .projects-grid, .cornell-section').forEach(function(el){ el.style.display = 'none'; });
+    buildCardsIndex();
+  }
+
+  function buildCardsIndex() {
+    var list = document.getElementById('cards-index-list');
+    if (list.innerHTML !== '') return;
+    var cards = document.querySelectorAll('.pcard');
+    var phaseColors = {launch:'#2D6A4F',capability:'#185FA5',idea:'#7A4E0A',blocked:'#8B1A1A',tech:'#2D6A4F'};
+    var phaseLabels = {launch:'Launch',capability:'Capability',idea:'Idea',blocked:'Bloqueado',tech:'Technology'};
+    cards.forEach(function(card) {
+      var name = card.querySelector('.pcard-name') ? card.querySelector('.pcard-name').textContent : '';
+      var fantasy = card.querySelector('.pcard-fantasy') ? card.querySelector('.pcard-fantasy').textContent : '';
+      var phase = card.getAttribute('data-phase') || '';
+      var status = card.getAttribute('data-status') || '';
+      var pill = card.querySelector('.status-pill');
+      var pillText = pill ? pill.textContent : '';
+      var phColor = phaseColors[phase] || '#6B6760';
+      var phLabel = phaseLabels[phase] || phase;
+      var statusDot = status === 'blocked' ? '🔴' : '🟢';
+
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface2);border:.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.15s;';
+      row.onmouseover = function(){ this.style.background='var(--surface3)'; };
+      row.onmouseout = function(){ this.style.background='var(--surface2)'; };
+      row.onclick = (function(id){ return function(){ scrollToCard(id); }; })(card.id);
+
+      var dot = document.createElement('span');
+      dot.style.cssText = 'font-size:14px;';
+      dot.textContent = statusDot;
+
+      var info = document.createElement('div');
+      info.style.cssText = 'flex:1;';
+      var nameEl = document.createElement('div');
+      nameEl.style.cssText = 'font-size:12px;font-weight:500;color:var(--text);';
+      nameEl.textContent = name;
+      info.appendChild(nameEl);
+      if (fantasy) {
+        var fantEl = document.createElement('div');
+        fantEl.style.cssText = 'font-size:10px;color:var(--text3);font-family:var(--mono);';
+        fantEl.textContent = fantasy;
+        info.appendChild(fantEl);
+      }
+
+      var phTag = document.createElement('span');
+      phTag.style.cssText = 'font-size:9px;font-family:var(--mono);color:'+phColor+';background:'+phColor+'18;padding:2px 8px;border-radius:10px;white-space:nowrap;';
+      phTag.textContent = phLabel;
+
+      var pillTag = document.createElement('span');
+      pillTag.style.cssText = 'font-size:10px;color:var(--text3);font-family:var(--mono);white-space:nowrap;';
+      pillTag.textContent = pillText;
+
+      row.appendChild(dot);
+      row.appendChild(info);
+      row.appendChild(phTag);
+      row.appendChild(pillTag);
+      list.appendChild(row);
+    });
+  }
+
+  function scrollToCard(cardId) {
+    // Deactivate cards index, show all cards, scroll to target
+    document.getElementById('cards-index-btn').classList.remove('active');
+    document.getElementById('cards-index-view').style.display = 'none';
+    document.querySelectorAll('.phase-section, .projects-grid, .cornell-section').forEach(function(el){ el.style.display = ''; });
+    applyFilters();
+    setTimeout(function(){
+      var el = document.getElementById(cardId);
+      if (el) {
+        el.scrollIntoView({behavior:'smooth', block:'center'});
+        el.style.outline = '3px solid #E24B4A';
+        el.style.boxShadow = '0 0 0 6px rgba(226,75,74,0.15)';
+        setTimeout(function(){ el.style.outline = ''; el.style.boxShadow = ''; }, 2500);
+      }
+    }, 100);
+  }
+
+
+  function scrollToProjectCard(id) {
+    // Show all cards first
+    document.querySelectorAll('.filter-btn:not(.owner-btn):not(.gantt-nav-btn)').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('timeline-view').style.display = 'none';
+    document.getElementById('board-view').style.display = 'none';
+    document.getElementById('gantt-view').style.display = 'none';
+    document.getElementById('cards-index-view').style.display = 'none';
+    document.querySelectorAll('.phase-section, .projects-grid, .cornell-section').forEach(function(el){ el.style.display = ''; });
+    applyFilters();
+    setTimeout(function(){
+      var el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({behavior:'smooth', block:'center'});
+        el.style.outline = '3px solid #E24B4A';
+        el.style.boxShadow = '0 0 0 6px rgba(226,75,74,0.15)';
+        setTimeout(function(){ el.style.outline = ''; el.style.boxShadow = ''; }, 2500);
+      }
+    }, 150);
+  }
+
+
+  function buildGanttDips() {
+    var lt=document.getElementById("g-launch-target");if(lt)lt.textContent="01 Dic 2026";
+    var NOW=new Date(2026,4,7),TARGET=new Date(2026,11,1),ORIGIN=new Date(2026,0,1),STEP=15;
+    var MN=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    var fmt3=function(d){return d.getDate()+' '+MN[d.getMonth()];};
+    var addD3=function(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r;};
+    var cIdx3=function(d,o,s){return Math.max(0,Math.round((d-o)/864e5/s));};
+    var tasks=PROJECTS.dips.tasks;
+    var durs={};
+    tasks.forEach(function(t){durs[t.id]=t.d;});
+    var calcD3=function(){
+      var s={},e={};
+      tasks.forEach(function(t){
+        var start=t.fs?new Date(t.fs):(t.dep?new Date(e[t.dep]):new Date(NOW));
+        s[t.id]=start;e[t.id]=addD3(start,durs[t.id]);
+      });
+      return {s:s,e:e};
+    };
+
+    // Build sliders for adj tasks
+    var sg=document.getElementById('g-sliders');
+    tasks.filter(function(t){return t.adj;}).forEach(function(task){
+      var isFree=task.grp==='free';
+      var g=document.createElement('div');
+      g.style.cssText='background:var(--surface2);border:.5px solid var(--border);border-radius:8px;padding:8px 10px;';
+      var dot=document.createElement('div');dot.style.cssText='display:flex;align-items:center;gap:5px;margin-bottom:3px;';
+      dot.innerHTML='<span style="width:8px;height:8px;border-radius:2px;background:'+(isFree?'#7F77DD':'#E24B4A')+';display:inline-block;flex-shrink:0;"></span><span style="font-size:9px;font-family:var(--mono);color:var(--text3);">'+(isFree?'FREE':'BLOCKER')+'</span>';
+      var name=document.createElement('div');name.style.cssText='font-size:11px;color:var(--text);font-weight:500;margin-bottom:4px;';name.textContent=task.lbl||task.l;
+      var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:6px;';
+      var sl=document.createElement('input');sl.type='range';sl.min=task.min||1;sl.max=task.max||90;sl.value=durs[task.id];sl.style.flex='1';
+      var val=document.createElement('span');val.style.cssText='font-size:11px;font-family:var(--mono);color:'+(isFree?'#7F77DD':'#E24B4A')+';min-width:32px;text-align:right;';val.textContent=durs[task.id]+'d';
+      sl.oninput=function(){durs[task.id]=parseInt(sl.value);val.textContent=sl.value+'d';renderDips();};
+      row.appendChild(sl);row.appendChild(val);g.appendChild(dot);g.appendChild(name);g.appendChild(row);sg.appendChild(g);
+    });
+
+    function renderDips(){
+      var dates=calcD3();
+      var ld=dates.e['dp_pilot'];
+      var diff=Math.round((ld-TARGET)/864e5);
+      var ldEl=document.getElementById('g-launch-date-display');
+      var delayNum=document.getElementById('g-delay-num');
+      var li=document.getElementById('g-launch-info');
+      var db=document.getElementById('g-delay-box');
+      if(ldEl)ldEl.textContent=fmt3(ld);
+      if(diff<=0){
+        if(li)li.style.cssText='flex:1;min-width:180px;background:#FEF0D0;border:.5px solid #F5D87A;border-radius:10px;padding:16px 20px;';
+        if(delayNum)delayNum.textContent='0d';
+        if(db)db.style.background='#2D6A4F';
+      }else{
+        if(li)li.style.cssText='flex:1;min-width:180px;background:#FDDCDC;border:.5px solid #F7C1C1;border-radius:10px;padding:16px 20px;';
+        if(delayNum)delayNum.textContent='+'+diff+'d';
+        if(db)db.style.background='#E24B4A';
+      }
+      var cols=[];
+      for(var d=new Date(ORIGIN);d<=addD3(ld,20);d=addD3(d,STEP))cols.push(new Date(d));
+      var nowCI=cIdx3(NOW,ORIGIN,STEP);
+      var W185='width:185px;min-width:185px;',W62='width:62px;min-width:62px;',W34='width:34px;min-width:34px;';
+      var bd='.5px solid #E2DED5',bg2='#F0EEE8';
+      var COLORS={dn:'#639922',free:'#7F77DD',blk:'#E24B4A'};
+      var html='<table style="border-collapse:collapse;white-space:nowrap;">';
+      var mc={};cols.forEach(function(c){var m=c.getMonth();mc[m]=(mc[m]||0)+1;});
+      html+='<tr><th style="'+W185+'text-align:left;padding:5px 8px;font-size:9px;font-family:var(--mono);color:#9E9B95;text-transform:uppercase;background:'+bg2+';border:'+bd+';">Tarea</th>';
+      html+='<th style="'+W62+'text-align:center;font-size:9px;font-family:var(--mono);color:#9E9B95;text-transform:uppercase;background:'+bg2+';border:'+bd+';">Inicio</th>';
+      html+='<th style="'+W62+'text-align:center;font-size:9px;font-family:var(--mono);color:#9E9B95;text-transform:uppercase;background:'+bg2+';border:'+bd+';">Deadline</th>';
+      Object.entries(mc).forEach(function(e){html+='<th colspan="'+e[1]+'" style="text-align:center;padding:4px 2px;font-size:10px;font-family:var(--mono);color:#6B6760;font-weight:500;background:'+bg2+';border:'+bd+';">'+MN[+e[0]]+'</th>';});
+      html+='</tr><tr><th style="'+W185+'background:'+bg2+';border:'+bd+';"></th><th style="'+W62+'background:'+bg2+';border:'+bd+';"></th><th style="'+W62+'background:'+bg2+';border:'+bd+';"></th>';
+      cols.forEach(function(c,i){var n=i===nowCI;html+='<th style="'+W34+'font-size:8px;font-family:var(--mono);text-align:center;padding:3px 1px;background:'+(n?'#DBE9F9':bg2)+';color:'+(n?'#1A4F8A':'#9E9B95')+';font-weight:'+(n?700:400)+';border:'+bd+';">'+(n?'HOY':c.getDate()+'/'+MN[c.getMonth()].slice(0,3))+'</th>';});
+      html+='</tr>';
+      var phases=[
+        {id:'idea',label:'Idea Phase',bg:'#FEF0D0',fg:'#7A4E0A',gf:null,ps:'idea'},
+        {id:'free',label:'Capability — FREE',bg:'#F0EBF8',fg:'#5B21B6',gf:'free',ps:'cap'},
+        {id:'blk',label:'Capability — BLOCKERS',bg:'#FEF0F0',fg:'#8B1A1A',gf:'blk',ps:'cap'},
+        {id:'lnch',label:'Launch Phase',bg:'#EAF3DE',fg:'#3B6D11',gf:null,ps:'lnch'},
+      ];
+      var hereShown=false;
+      phases.forEach(function(ph){
+        var pts=tasks.filter(function(t){return t.ph===ph.ps&&(ph.gf?t.grp===ph.gf:true);});
+        if(!pts.length)return;
+        html+='<tr><td colspan="'+(cols.length+3)+'" style="background:'+ph.bg+';color:'+ph.fg+';font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:5px 8px;border:'+bd+';">'+ph.label+'</td></tr>';
+        pts.forEach(function(task){
+          var s=dates.s[task.id],e=dates.e[task.id];
+          if(!s||!e)return;
+          var sc=cIdx3(s,ORIGIN,STEP),ec=cIdx3(e,ORIGIN,STEP);
+          var isDone=task.t==='dn';
+          var col=COLORS[task.t]||'#888';
+          html+='<tr><td style="'+W185+'padding:3px 8px;font-size:11px;color:'+(isDone?'#9E9B95':'#1A1916')+';border:'+bd+';vertical-align:middle;">'+(isDone?'✓ ':'')+task.l+'<span style="font-size:9px;font-family:var(--mono);color:#9E9B95;display:block;">'+task.o+'</span></td>';
+          html+='<td style="'+W62+'text-align:center;padding:3px 4px;font-size:10px;font-family:var(--mono);color:#6B6760;border:'+bd+';vertical-align:middle;line-height:1.4;"><span style="font-size:8px;color:#9E9B95;display:block;">inicio</span>'+fmt3(s)+'</td>';
+          html+='<td style="'+W62+'text-align:center;padding:3px 4px;font-size:10px;font-family:var(--mono);color:'+(isDone?'#9E9B95':'#E24B4A')+';font-weight:'+(isDone?400:500)+';border:'+bd+';vertical-align:middle;line-height:1.4;"><span style="font-size:8px;display:block;opacity:.7;">deadline</span>'+fmt3(e)+'</td>';
+          cols.forEach(function(c,i){
+            var n=i===nowCI,inBar=i>=sc&&i<=ec;
+            html+='<td style="'+W34+'height:28px;border:'+bd+';padding:0;vertical-align:middle;background:'+(n?'rgba(55,138,221,0.06)':'transparent')+';">';
+            if(inBar){
+              var span=ec-sc,br='';
+              if(span===0)br='border-radius:3px;margin:0 2px;';
+              else if(i===sc)br='border-radius:3px 0 0 3px;margin-left:2px;';
+              else if(i===ec)br='border-radius:0 3px 3px 0;margin-right:2px;';
+              var ht='';
+              if(n&&!isDone&&!hereShown){ht='<div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:#378ADD;color:#fff;font-size:8px;font-family:var(--mono);font-weight:700;padding:2px 5px;border-radius:3px;white-space:nowrap;z-index:10;">WE ARE HERE</div>';hereShown=true;}
+              html+='<div style="position:relative;overflow:visible;">'+ht+'<div style="height:13px;background:'+col+';display:block;'+br+(isDone?'opacity:.8;':'')+'"></div></div>';
+            }
+            html+='</td>';
+          });
+          html+='</tr>';
+        });
+      });
+      var pilotCI=cIdx3(ld,ORIGIN,STEP);
+      html+='<tr><td style="'+W185+'background:#1A1916;color:#fff;font-size:9px;font-family:var(--mono);font-weight:600;padding:5px 8px;border:.5px solid #1A1916;">🏁 END OF TASKS: '+fmt3(ld)+'</td><td style="'+W62+'background:#1A1916;border:.5px solid #1A1916;"></td><td style="'+W62+'background:#1A1916;border:.5px solid #1A1916;"></td>';
+      cols.forEach(function(c,i){html+='<td style="'+W34+'background:#1A1916;border:.5px solid rgba(255,255,255,.1);text-align:center;vertical-align:middle;">'+(i===pilotCI?'<span style="color:#EF9F27;font-size:14px;">★</span>':'')+'</td>';});
+      html+='</tr></table>';
+      document.getElementById('g-gantt').innerHTML=html;
+    }
+    renderDips();
+  }
+
+
+  function renderCardNextStepsDados() {
+    var el = document.getElementById('nextsteps-dados');
+    if (!el) return;
+    var MN=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    function fmt(d){return d.getDate()+' '+MN[d.getMonth()];}
+    function addD(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r;}
+    var NOW=new Date(2026,4,7);
+    var tasks=PROJECTS.dados.tasks;
+    var s={},e={};
+    tasks.forEach(function(t){
+      var start=t.fs?new Date(t.fs):(t.dep?new Date(e[t.dep]):new Date(NOW));
+      s[t.id]=start; e[t.id]=addD(start,t.d);
+    });
+    function deadline(id){
+      return e[id]?'<span style="font-size:10px;font-family:var(--mono);color:#E24B4A;margin-left:auto;padding-left:8px;">→ '+fmt(e[id])+'</span>':'';
+    }
+    function confirm_badge(){
+      return '<span style="font-size:10px;background:#FEF0D0;color:#7A4E0A;padding:1px 6px;border-radius:4px;margin-left:4px;">⚠️ CONFIRMAR FECHA</span>';
+    }
+    function done_item(txt){
+      return '<div class="next-item"><span class="next-n" style="color:#2D6A4F;">✓</span><span style="color:#9E9B95;text-decoration:line-through;">'+txt+'</span></div>';
+    }
+    function owner_header(color, txt){
+      return '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:'+color+';margin:10px 0 4px 0;">'+txt+'</div>';
+    }
+    function step(n, txt, owner, id, extra){
+      var dl = id ? deadline(id) : '';
+      var ex = extra || '';
+      return '<div class="next-item"><span class="next-n">'+n+'.</span><span>'+txt+ex+'<span class="next-owner" style="margin-left:6px;">'+owner+'</span></span>'+dl+'</div>';
+    }
+
+    var html = '';
+    html += done_item('Degustación realizada — resultado: necesita ajuste (sabor + textura)');
+    html += done_item('Feedback enviado a Cornell');
+
+    html += owner_header('#EC4899', 'Agencia');
+    html += step(1, '🟦 Plastic: Cerrar diseño Flow Pack', 'Agencia', 'd_disp_fp');
+    html += step(2, '🟩 Glass: Diseño labels — depende de elección de jar con Luis', 'Agencia', 'd_disp_vid');
+
+    html += owner_header('#10B981', 'Supply Chain — Luis');
+    html += step(3, '🟩 Glass: Definir tamaño jar (probar 6 oz) y color de tapa', 'Luis', 'd_jar_size');
+    html += step(4, 'Una vez aprobados diseños Plastic + Glass: impresión digital 100 unidades (prototipos)', 'Luis', 'd_impr_fp');
+    html += step(5, 'En segunda instancia: encargar frascos vidrio, labels y envases finales', 'Luis', null);
+
+    html += owner_header('#9CA3AF', 'Operations — Guille');
+    html += step(6, 'Reunión con Cornell — entender proceso, tiempos e inversión '+confirm_badge(), 'Guille / Felicitas', 'd_reunion');
+    html += step(7, 'Planificación proceso interno para ambos formatos (Plastic y Jar vidrio) — tiempos, inversión y escalabilidad', 'Guille', null);
+    html += step(8, 'Escalar operaciones en planta (tiempos a definir con Guille post reunión Cornell)', 'Guille', 'd_escalar');
+
+    html += owner_header('#F59E0B', 'Food Safety — Fer');
+    html += step(9, '🟦 Plastic: Food Safety + SC Approval (5d post diseño)', 'Fer', 'd_fs_fp');
+    html += step(10, '🟩 Glass: Food Safety + SC Approval (5d post diseño labels)', 'Fer', 'd_fs_vid');
+    html += step(11, 'Shelf Life tests 60d — una vez definido el proceso Cornell', 'Fer / Cornell', 'd_shelf');
+
+    html += owner_header('#2D6A4F', 'Launch');
+    html += step(12, 'Pilot Test — Plantcity (Alberto + Luis) y Miami (Guille)', 'Felicitas / Guille / Alberto / Luis', 'd_pilot_fp');
+    html += step(13, 'Sales Pitch → Retailers presentation', 'Ale / Agencia', null);
+
+    el.innerHTML = html;
+  }
+
+
+  var dadosPhases = [
+  {id:'ph1',name:'Idea Phase',emoji:'💡',tasks:[
+    {id:'t0',name:'Bosscard',owner:'Felicitas',type:'done',mode:'fixed',fd:'2026-01-01',dur:2,dep:null,depName:'',subtasks:[],collapsed:false},
+    {id:'t1',name:'Identify and shape idea',owner:'Felicitas',type:'done',mode:'prev',fd:null,dur:2,dep:null,depName:'',subtasks:[],collapsed:false},
+    {id:'t2',name:'Validate Consumer/Market Evidence',owner:'Felicitas',type:'done',mode:'prev',fd:null,dur:3,dep:null,depName:'',subtasks:[],collapsed:false},
+    {id:'t3',name:'Validate size - Market opportunity (Nielsen)',owner:'Felicitas',type:'done',mode:'prev',fd:null,dur:1,dep:null,depName:'',subtasks:[],collapsed:false},
+    {id:'t4',name:'Define target cost (Form/Pack/Production)',owner:'Felicitas',type:'done',mode:'prev',fd:null,dur:1,dep:null,depName:'',subtasks:[],collapsed:false},
+    {id:'t5',name:'Build Draft Business Case',owner:'Felicitas/Fede',type:'done',mode:'prev',fd:null,dur:2,dep:null,depName:'',subtasks:[],collapsed:false},
+    {id:'t6',name:'Gate Keeping Meeting',owner:'Felicitas',type:'done',mode:'fixed',fd:'2026-02-13',dur:1,dep:null,depName:'',subtasks:[],collapsed:false}
+  ]},
+  {id:'ph2',name:'Capability Phase',emoji:'⚙️',tasks:[
+    {id:'t7',name:'Formulation development',owner:'Cornell',type:'blk',mode:'fixed',fd:'2026-02-01',dur:120,dep:null,depName:'',subtasks:[],collapsed:false},
+    {id:'t8',name:'Shelf Life tests (60d)',owner:'Fer/Cornell',type:'free',mode:'search',fd:null,dur:60,dep:'t7',depName:'Formulation development',subtasks:[],collapsed:false},
+    {id:'t9',name:'Packaging development',owner:'Agencia/Felicitas/Luis',type:'free',mode:'fixed',fd:'2026-05-01',dur:1,dep:null,depName:'',collapsed:true,subtasks:[
+      {id:'s1',name:'Plastic Bag: diseno Flow Pack',owner:'Agencia/Felicitas',type:'free',mode:'fixed',fd:'2026-05-01',dur:19,dep:null,depName:''},
+      {id:'s2',name:'Glass: Definir jar size + cap',owner:'Luis',type:'free',mode:'fixed',fd:'2026-05-01',dur:21,dep:null,depName:''},
+      {id:'s3',name:'Glass: Diseno labels (post jar)',owner:'Agencia/Felicitas',type:'free',mode:'search',fd:null,dur:2,dep:'s2',depName:'Glass: Definir jar size + cap'},
+      {id:'s4',name:'Plastic: Food Safety + Approval',owner:'Fer',type:'free',mode:'search',fd:null,dur:2,dep:'s1',depName:'Plastic Bag: diseno Flow Pack'},
+      {id:'s5',name:'Glass: Food Safety + Approval',owner:'Fer',type:'free',mode:'search',fd:null,dur:2,dep:'s3',depName:'Glass: Diseno labels (post jar)'},
+      {id:'s6',name:'Plastic: Impresion digital bag (10d)',owner:'Externo',type:'free',mode:'search',fd:null,dur:10,dep:'s4',depName:'Plastic: Food Safety + Approval'},
+      {id:'s7',name:'Glass: Impresion digital label (10d)',owner:'Externo',type:'free',mode:'search',fd:null,dur:10,dep:'s5',depName:'Glass: Food Safety + Approval'},
+      {id:'s8',name:'Plastic: Produccion bag (60d)',owner:'Externo',type:'free',mode:'search',fd:null,dur:60,dep:'s6',depName:'Plastic: Impresion digital bag (10d)'},
+      {id:'s9',name:'Glass: Jars + Labels produccion (30d)',owner:'Externo',type:'free',mode:'search',fd:null,dur:30,dep:'s7',depName:'Glass: Impresion digital label (10d)'}
+    ]},
+    {id:'t10',name:'Operations setup',owner:'Guille',type:'blk',mode:'fixed',fd:'2026-05-18',dur:1,dep:null,depName:'',collapsed:true,subtasks:[
+      {id:'s10',name:'Reunion Guille + Cornell',owner:'Guille',type:'blk',mode:'fixed',fd:'2026-05-18',dur:1,dep:null,depName:''},
+      {id:'s11',name:'Diseno de linea operativa (10d)',owner:'Guille',type:'blk',mode:'search',fd:null,dur:10,dep:'s10',depName:'Reunion Guille + Cornell'},
+      {id:'s12',name:'Compra equipos + puesta a punto (60d)',owner:'Guille',type:'blk',mode:'search',fd:null,dur:60,dep:'t7',depName:'Formulation development'}
+    ]}
+  ]},
+  {id:'ph3',name:'Launch Phase',emoji:'🚀',tasks:[
+    {id:'t11',name:'Final Business Case',owner:'Felicitas/Fede',type:'free',mode:'search',fd:null,dur:5,dep:'t7',depName:'Formulation development',subtasks:[],collapsed:false},
+    {id:'t12',name:'Sales Pitch Presentation',owner:'Ale/Agencia',type:'free',mode:'prev',fd:null,dur:14,dep:null,depName:'',subtasks:[],collapsed:false},
+    {id:'t13',name:'POS + Communication assets',owner:'Agencia',type:'free',mode:'prev',fd:null,dur:10,dep:null,depName:'',subtasks:[],collapsed:false},
+    {id:'t14',name:'Retailers presentation',owner:'Ale',type:'blk',mode:'prev',fd:null,dur:7,dep:null,depName:'',subtasks:[],collapsed:false},
+    {id:'t15',name:'Gate Keeping Meeting 2',owner:'Felicitas',type:'blk',mode:'prev',fd:null,dur:1,dep:null,depName:'',subtasks:[],collapsed:false},
+    {id:'t16',name:'Launch',owner:'Equipo',type:'blk',mode:'prev',fd:null,dur:1,dep:null,depName:'',subtasks:[],collapsed:false}
+  ]}
+];
+  var dadosC = {}, dadosIdC = 100;
+  var dadosDaY = 1.8;
+  var dadosMN = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  function dadosNid(p){return (p||'t')+(++dadosIdC);}
+  function dadosFmt(d){return d?d.getDate()+' '+dadosMN[d.getMonth()]:'--';}
+  function dadosAddD(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r;}
+  function dadosDif(a,b){return Math.round((b-a)/864e5);}
+  function dadosFrS(s){if(!s)return null;var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+  function dadosToS(d){if(!d)return'';var m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return d.getFullYear()+'-'+m+'-'+dd;}
+
+  function dadosAllT(){var r=[];dadosPhases.forEach(function(p){p.tasks.forEach(function(t){r.push(t);if(t.subtasks)t.subtasks.forEach(function(s){r.push(s);});});});return r;}
+  function dadosAllMainT(){var r=[];dadosPhases.forEach(function(p){p.tasks.forEach(function(t){r.push(t);});});return r;}
+  function dadosPrevTask(tid){var all=dadosAllMainT();var idx=all.findIndex(function(t){return t.id===tid;});return idx>0?all[idx-1]:null;}
+  function dadosPrevSub(sid,parent){var subs=parent.subtasks;var idx=subs.findIndex(function(s){return s.id===sid;});return idx>0?subs[idx-1]:null;}
+
+  function dadosCalcAll(){
+    dadosC={};
+    var TODAY_D=new Date(2026,4,13);
+    dadosPhases.forEach(function(ph){
+      ph.tasks.forEach(function(t){
+        var s;
+        if(t.mode==='fixed'&&t.fd)s=dadosFrS(t.fd);
+        else if(t.mode==='prev'){var prev=dadosPrevTask(t.id);s=(prev&&dadosC[prev.id])?new Date(dadosC[prev.id].e):new Date(TODAY_D);}
+        else if(t.mode==='search'&&t.dep&&dadosC[t.dep])s=new Date(dadosC[t.dep].e);
+        else s=new Date(TODAY_D);
+        if(!t.subtasks||t.subtasks.length===0){
+          dadosC[t.id]={s:s,e:dadosAddD(s,t.dur)};
+        } else {
+          t.subtasks.forEach(function(sub){
+            var ss;
+            if(sub.mode==='fixed'&&sub.fd)ss=dadosFrS(sub.fd);
+            else if(sub.mode==='prev'){var ps=dadosPrevSub(sub.id,t);ss=(ps&&dadosC[ps.id])?new Date(dadosC[ps.id].e):new Date(s);}
+            else if(sub.mode==='search'&&sub.dep&&dadosC[sub.dep])ss=new Date(dadosC[sub.dep].e);
+            else ss=new Date(s);
+            dadosC[sub.id]={s:ss,e:dadosAddD(ss,sub.dur)};
+          });
+          var allE=t.subtasks.map(function(x){return dadosC[x.id]?dadosC[x.id].e:null;}).filter(Boolean);
+          var allS=t.subtasks.map(function(x){return dadosC[x.id]?dadosC[x.id].s:null;}).filter(Boolean);
+          var minS=allS.length?allS.reduce(function(a,b){return a<b?a:b;}):s;
+          var maxE=allE.length?allE.reduce(function(a,b){return a>b?a:b;}):dadosAddD(s,t.dur);
+          dadosC[t.id]={s:minS,e:maxE};
+        }
+      });
+    });
+  }
+
+  function dadosLastBlkEnd(){
+    var last=null;
+    dadosAllT().filter(function(t){return t.type==='blk';}).forEach(function(t){
+      if(dadosC[t.id]&&(!last||dadosC[t.id].e>last))last=dadosC[t.id].e;
+    });
+    return last;
+  }
+
+  function dMkEl(tag,cls,txt){var el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el;}
+
+  function dBuildIni(task,isSub,parent){
+    var div=dMkEl('div','g-ini-cell');
+    var chips=dMkEl('div','g-ini-chips');
+    [{m:'fixed',l:'Fecha'},{m:'prev',l:'Anterior'},{m:'search',l:'Buscar'}].forEach(function(opt){
+      var chip=dMkEl('span','g-chip'+(task.mode===opt.m?' on':''),opt.l);
+      chip.addEventListener('click',(function(tsk,mode){return function(){tsk.mode=mode;if(mode!=='search'){tsk.dep=null;tsk.depName='';}if(mode!=='fixed')tsk.fd=null;openGanttDados();};})(task,opt.m));
+      chips.appendChild(chip);
+    });
+    div.appendChild(chips);
+    if(task.mode==='fixed'){
+      var di=document.createElement('input');di.type='date';di.className='g-date-inp';di.value=task.fd||'';
+      di.addEventListener('change',(function(tsk){return function(){tsk.fd=this.value;openGanttDados();};})(task));
+      div.appendChild(di);
+    } else if(task.mode==='prev'){
+      var pt=isSub?dadosPrevSub(task.id,parent):dadosPrevTask(task.id);
+      div.appendChild(dMkEl('div','g-prev-info',pt?'↳ '+pt.name.substring(0,16):'— primera —'));
+    } else {
+      var aw=dMkEl('div','g-ac-wrap'),ai=dMkEl('input','g-ac-inp'),al=dMkEl('div','g-ac-list');
+      ai.placeholder='Buscar...';ai.value=task.depName||'';
+      ai.addEventListener('input',(function(tsk,list,inp){return function(){
+        var q=this.value.toLowerCase();list.innerHTML='';
+        if(q){dadosAllT().filter(function(x){return x.id!==tsk.id&&x.name.toLowerCase().indexOf(q)>=0;}).forEach(function(x){var it=dMkEl('div','g-ac-item',x.name);it.addEventListener('click',(function(xt){return function(){tsk.dep=xt.id;tsk.depName=xt.name;inp.value=xt.name;list.classList.remove('open');openGanttDados();};})(x));list.appendChild(it);});if(list.children.length)list.classList.add('open');}else{list.classList.remove('open');tsk.dep=null;tsk.depName='';}tsk.depName=this.value;
+      };})(task,al,ai));
+      document.addEventListener('click',function(e){if(!aw.contains(e.target))al.classList.remove('open');});
+      aw.appendChild(ai);aw.appendChild(al);div.appendChild(aw);
+    }
+    return div;
+  }
+
+  function dBuildRow(t,isSub,parent,phId){
+    var c=dadosC[t.id];
+    var item=dMkEl('div','g-titem'+(isSub?' g-subtask':''));
+    var icons={blk:'🔴',free:'🟣',done:'✅'};
+    var hasS=!isSub&&t.subtasks&&t.subtasks.length>0;
+    item.appendChild(dMkEl('div','g-dh','⠿'));
+    var cb=dMkEl('div',hasS?'g-cb':'g-cb g-cb-empty',hasS?(t.collapsed?'▶':'▼'):'');
+    if(hasS)cb.addEventListener('click',(function(task){return function(){task.collapsed=!task.collapsed;openGanttDados();};})(t));
+    item.appendChild(cb);
+    var na=document.createElement('textarea');na.className='g-fi';na.value=t.name;na.rows=1;na.style.overflow='hidden';
+    na.addEventListener('input',(function(task){return function(){task.name=this.value;this.style.height='auto';this.style.height=this.scrollHeight+'px';};})(t));
+    na.addEventListener('blur',function(){openGanttDados();});
+    item.appendChild(na);
+    var ow=document.createElement('input');ow.className='g-fi g-own';ow.value=t.owner;ow.placeholder='Owner';
+    ow.addEventListener('input',(function(task){return function(){task.owner=this.value;};})(t));
+    item.appendChild(ow);
+    var du=document.createElement('input');du.className='g-fi g-dur';du.type='number';du.value=hasS?'':t.dur;du.min=1;
+    if(hasS){du.disabled=true;du.style.opacity='.4';}
+    du.addEventListener('change',(function(task){return function(){task.dur=parseInt(this.value)||1;openGanttDados();};})(t));
+    item.appendChild(du);
+    item.appendChild(dBuildIni(t,isSub,parent));
+    item.appendChild(dMkEl('div','g-dl',c?dadosFmt(c.e):'--'));
+    var badge=dMkEl('div','g-badge '+t.type,icons[t.type]);badge.title='Click para cambiar tipo';
+    badge.addEventListener('click',(function(task){return function(){var nx={blk:'free',free:'done',done:'blk'};task.type=nx[task.type];openGanttDados();};})(t));
+    item.appendChild(badge);
+    var del=dMkEl('div','g-del','✕');
+    del.addEventListener('click',(function(pid,tid,isSb,par){return function(){if(isSb){par.subtasks=par.subtasks.filter(function(s){return s.id!==tid;});}else{var ph=dadosPhases.find(function(p){return p.id===pid;});if(ph)ph.tasks=ph.tasks.filter(function(t){return t.id!==tid;});}openGanttDados();};})(phId,t.id,isSub,parent));
+    item.appendChild(del);
+    return item;
+  }
+
+  
+
+  function openGanttDados() {
+    window.open('gantt_dados_v2.html', '_blank');
+  }
+
+
+
+  
+
+</script>
+<div id="timeline-view" style="display:none;padding:20px 40px 60px;"><div id="tl-canvas" style="overflow-x:auto;"></div></div>
+
+<div id="board-view" style="display:none;padding:20px 40px 60px;"><div id="board-container"></div></div>
+
+<div id="gantt-view" style="display:none;padding:20px 40px 60px;">
+  <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div id="gantt-project-title" style="font-size:13px;font-weight:600;color:var(--text);flex:1;"></div>
+    <button id="gantt-open-btn" onclick="openGanttDados()" style="display:none;background:var(--text);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:11px;font-family:var(--mono);cursor:pointer;">⛶ Pantalla completa</button>
+  </div>
+  <div id="g-launch-info" style="margin-bottom:12px;"></div>
+  <div id="g-sliders" style="margin-bottom:16px;padding-bottom:16px;border-bottom:.5px solid var(--border);"></div>
+  <div id="g-gantt"></div>
+</div>
+
+<div id="cards-index-view" style="display:none;padding:20px 40px 60px;">
+  <div id="cards-index-list" style="display:flex;flex-direction:column;gap:6px;max-width:600px;"></div>
+</div>
+
+
+
+</body>
+</html>
